@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.env
+.env*.local
+dashboard/.next/
+dashboard/out/
+dashboard/build/
+*.log
+.DS_Store
+package-lock.json
+dashboard/package-lock.json
