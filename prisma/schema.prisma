@@ -1,0 +1,233 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model GuildConfig {
+  guildId           String   @id
+  prefix            String   @default("-")
+  language          String   @default("en")
+  timezone          String   @default("UTC")
+  premium           Boolean  @default(false)
+  
+  // Welcome Settings
+  welcomeChannelId  String?
+  welcomeMessage    String?  // Template string
+  welcomeAutoDelete Int?     // Auto-delete duration in seconds
+  welcomeDmEnabled  Boolean  @default(false)
+  welcomeImageBg    String?  // Canvas background image URL
+  
+  // Boost Settings
+  boostChannelId    String?
+  boostMessage      String?
+  boostImageBg      String?
+  
+  // Auto Roles
+  autoRolesHumans   String[] @default([])
+  autoRolesBots     String[] @default([])
+
+  // Temporary Voice Config
+  tempVcGeneratorId String?  // VC channel ID which triggers creation
+  tempVcCategoryId  String?  // Category where temp VC will be created
+  tempVcNameTemplate String   @default("{username}'s Channel")
+  tempVcInterfaceId String?  // Interface message channel ID
+
+  // Logging Config
+  logChannelId      String?
+  logEnabled        Boolean  @default(false)
+  logToggles        Json     @default("{}") // Map of log categories to boolean
+
+  // Anti Raid Config
+  antiRaidEnabled    Boolean @default(false)
+  antiRaidJoinsLimit Int     @default(10)   // Max joins
+  antiRaidJoinsWindow Int    @default(10)   // Seconds window
+  antiRaidMinAgeDays Int     @default(3)    // Min account age
+  antiRaidAction     String  @default("kick") // kick, ban, lock
+  antiRaidLocked     Boolean @default(false) // Server-wide lockdown
+
+  // Anti Nuke Config
+  antiNukeEnabled    Boolean @default(false)
+  antiNukeLimits     Json    @default("{}") // Action limits (e.g. max channel delete/min)
+  antiNukeAction     String  @default("demote") // demote, ban
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  members           MemberStats[]
+  tempVcs           TempVC[]
+  reactionRoles     ReactionRole[]
+  autoresponders    AutoResponder[]
+  panels            Panel[]
+  giveaways         Giveaway[]
+  whitelists        Whitelist[]
+  extraOwners       ExtraOwner[]
+  auditLogs         AuditLog[]
+}
+
+model MemberStats {
+  id              String      @id @default(uuid())
+  guildId         String
+  userId          String
+  
+  // Message counts
+  totalMessages   Int         @default(0)
+  dailyMessages   Int         @default(0)
+  weeklyMessages  Int         @default(0)
+  monthlyMessages Int         @default(0)
+  
+  // Voice stats
+  voiceTimeSeconds Int        @default(0)
+  
+  // AFK state
+  afkMessage      String?
+  afkSince        DateTime?
+  
+  // Invites
+  inviteCode      String?
+  inviterId       String?
+  invitesCount    Int         @default(0)
+  fakeInvites     Int         @default(0)
+  bonusInvites    Int         @default(0)
+  leftInvites     Int         @default(0)
+
+  guild           GuildConfig @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+
+  @@unique([guildId, userId])
+}
+
+model TempVC {
+  channelId  String      @id
+  guildId    String
+  ownerId    String
+  name       String
+  limit      Int         @default(0)
+  locked     Boolean     @default(false)
+  hidden     Boolean     @default(false)
+  trusted    String[]    @default([])
+  untrusted  String[]    @default([])
+
+  guild      GuildConfig @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+}
+
+model InviteLog {
+  id        String   @id @default(uuid())
+  guildId   String
+  userId    String
+  code      String
+  inviterId String
+  fake      Boolean  @default(false)
+  joinedAt  DateTime @default(now())
+  leftAt    DateTime?
+}
+
+model InviteReward {
+  id          String   @id @default(uuid())
+  guildId     String
+  inviteCount Int
+  roleId      String
+
+  @@unique([guildId, inviteCount])
+}
+
+model ReactionRole {
+  id          String      @id @default(uuid())
+  guildId     String
+  channelId   String
+  messageId   String
+  emoji       String
+  roleId      String
+
+  guild       GuildConfig @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+
+  @@unique([messageId, emoji, roleId])
+}
+
+model AutoResponder {
+  id          String      @id @default(uuid())
+  guildId     String
+  trigger     String
+  response    String      @db.Text
+  matchType   String      @default("exact") // exact, contains, regex
+
+  guild       GuildConfig @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+
+  @@unique([guildId, trigger])
+}
+
+model Panel {
+  id          String      @id @default(uuid())
+  guildId     String
+  channelId   String
+  messageId   String?
+  type        String      // welcome, verification, tempvc, giveaway, support
+  title       String
+  description String      @db.Text
+  color       String      @default("#5865F2")
+  buttonLabel String?
+  buttonEmoji String?
+
+  guild       GuildConfig @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+}
+
+model Giveaway {
+  id          String      @id @default(uuid()) // Uses messageId
+  guildId     String
+  channelId   String
+  prize       String
+  winnerCount Int         @default(1)
+  endsAt      DateTime
+  ended       Boolean     @default(false)
+  hostedBy    String
+  entries     String[]    @default([])
+  winners     String[]    @default([])
+
+  guild       GuildConfig @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+}
+
+model Whitelist {
+  id          String      @id @default(uuid())
+  guildId     String
+  targetId    String      // User or Role ID
+  type        String      // user, role
+  modules     String[]    @default(["*"]) // Whitelisted modules (antinuke, antiraid, etc.)
+
+  guild       GuildConfig @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+
+  @@unique([guildId, targetId])
+}
+
+model ExtraOwner {
+  id          String      @id @default(uuid())
+  guildId     String
+  userId      String
+
+  guild       GuildConfig @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+
+  @@unique([guildId, userId])
+}
+
+model AuditLog {
+  id          String      @id @default(uuid())
+  guildId     String
+  userId      String      // Mod/Admin
+  action      String      // e.g. Ban, TempVC rename, Antinuke Whitelist
+  target      String?     // Target user/channel
+  reason      String?
+  createdAt   DateTime    @default(now())
+
+  guild       GuildConfig @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+}
+
+model CountState {
+  guildId      String   @id
+  channelId    String
+  currentCount Int      @default(0)
+  lastUserId   String?
+  highScore    Int      @default(0)
+  updatedAt    DateTime @updatedAt
+}
