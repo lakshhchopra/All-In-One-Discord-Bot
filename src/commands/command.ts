@@ -11,6 +11,8 @@ export interface Command {
   aliases?: string[];
   permissionLevel?: PermissionLevel;
   cooldown?: number; // In seconds
+  usage?: string;
+  examples?: string[];
   slashBuilder?: SlashCommandBuilder | Omit<SlashCommandBuilder, "addSubcommand" | "addSubcommandGroup">;
   execute(ctx: CommandContext): Promise<any>;
 }

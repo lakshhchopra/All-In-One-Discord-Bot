@@ -32,6 +32,8 @@ export const afkCommand: Command = {
   name: "afk",
   description: "Set yourself as AFK.",
   category: "Information",
+  usage: "afk [message]",
+  examples: ["afk studying", "afk"],
   execute: async (ctx) => {
     const reason = ctx.args.join(" ") || "AFK";
 
@@ -47,7 +49,7 @@ export const afkCommand: Command = {
       }
     } catch {}
 
-    return ctx.reply({ embeds: [UniversalEmbed.success(`You are now AFK: **${reason}**`, ctx.guild)] });
+    return ctx.reply({ embeds: [UniversalEmbed.success(`Successfully set your AFK: ${reason}`, ctx.guild)] });
   }
 };
 

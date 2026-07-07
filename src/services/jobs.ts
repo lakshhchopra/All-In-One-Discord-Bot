@@ -3,7 +3,7 @@ import { redis } from "./redis.js";
 
 // Initialize a background jobs queue
 export const taskQueue = new Queue("bot-tasks", {
-  connection: redis
+  connection: redis as any
 });
 
 // Worker handler map
@@ -25,7 +25,7 @@ const worker = new Worker(
     }
   },
   {
-    connection: redis,
+    connection: redis as any,
     concurrency: 5
   }
 );

@@ -1,7 +1,7 @@
 import { GuildMember, TextChannel, AttachmentBuilder } from "discord.js";
 import { prisma } from "../services/db.js";
 import { drawWelcomeCard } from "../services/canvas.js";
-import { parseVariables } from "../services/utils/parser.ts";
+import { parseVariables } from "../services/utils/parser.js";
 
 export async function handleGuildMemberAdd(member: GuildMember) {
   const guild = member.guild;

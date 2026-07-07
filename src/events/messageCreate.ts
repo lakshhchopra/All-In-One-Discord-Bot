@@ -10,6 +10,13 @@ export async function handleMessageCreate(message: Message) {
   const guildId = message.guild.id;
   const userId = message.author.id;
 
+  // 0. Ensure GuildConfig exists for this guild to satisfy foreign key constraints
+  await prisma.guildConfig.upsert({
+    where: { guildId },
+    update: {},
+    create: { guildId }
+  });
+
   // 1. Increment Member Message Statistics
   await prisma.memberStats.upsert({
     where: { guildId_userId: { guildId, userId } },
@@ -108,7 +115,9 @@ export async function handleMessageCreate(message: Message) {
     }
 
     if (triggered) {
-      await message.channel.send(ar.response);
+      if ("send" in message.channel) {
+        await message.channel.send(ar.response);
+      }
       return;
     }
   }

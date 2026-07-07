@@ -1,10 +1,11 @@
-import { Client, GatewayIntentBits, Events } from "discord.js";
+import { Client, GatewayIntentBits, Events, ActivityType } from "discord.js";
 import { config } from "./config/index.js";
 import { connectDatabase } from "./services/db.js";
 import { handleMessageCreate } from "./events/messageCreate.js";
 import { handleInteractionCreate } from "./events/interactionCreate.js";
 import { handleGuildMemberAdd } from "./events/guildMemberAdd.js";
 import { handleVoiceStateUpdate } from "./events/voiceStateUpdate.js";
+import { handleGuildCreate } from "./events/guildCreate.js";
 import { registerConfiguration } from "./modules/configuration/commands.js";
 import { registerWelcome } from "./modules/welcome/commands.js";
 import { registerModeration } from "./modules/moderation/commands.js";
@@ -49,8 +50,34 @@ registerGiveaway();
 registerGames();
 registerInfo();
 
-client.once(Events.ClientReady, (readyClient) => {
+function updateBotPresence(readyClient: any) {
+  try {
+    const totalMembers = readyClient.guilds.cache.reduce((acc: number, guild: any) => acc + guild.memberCount, 0);
+    const guild = readyClient.guilds.cache.get("1126413930105950279") || readyClient.guilds.cache.first();
+
+    readyClient.user.setPresence({
+      activities: [{
+        name: "🦋. Gupshup",
+        type: ActivityType.Listening,
+        details: "discord.gg/gupshup",
+        state: `${totalMembers} members`,
+        assets: {
+          largeText: "Gupshup"
+        }
+      }],
+      status: "online"
+    });
+  } catch (err) {
+    console.error("⚠️ Failed to update bot presence:", err);
+  }
+}
+
+client.once(Events.ClientReady, async (readyClient) => {
   console.log(`🤖 Discord Bot logged in as ${readyClient.user.tag}`);
+
+  // 1. Set bot activity presence and start update interval
+  updateBotPresence(readyClient);
+  setInterval(() => updateBotPresence(readyClient), 10 * 60 * 1000);
 });
 
 // Register Event Listeners
@@ -58,6 +85,7 @@ client.on(Events.MessageCreate, handleMessageCreate);
 client.on(Events.InteractionCreate, handleInteractionCreate);
 client.on(Events.GuildMemberAdd, handleGuildMemberAdd);
 client.on(Events.VoiceStateUpdate, handleVoiceStateUpdate);
+client.on(Events.GuildCreate, handleGuildCreate);
 
 async function bootstrap() {
   // 1. Connect database

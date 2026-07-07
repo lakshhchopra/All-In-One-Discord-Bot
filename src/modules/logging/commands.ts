@@ -32,7 +32,9 @@ export const logCommand: Command = {
     const action = ctx.getStringOption("action", 1); // enable/disable for subcategories
 
     const config = await prisma.guildConfig.findUnique({ where: { guildId: ctx.guild.id } });
-    const logToggles = (config?.logToggles as Record<string, boolean>) ?? {};
+    if (!category) {
+      return ctx.reply({ embeds: [UniversalEmbed.info("Usage: `log [enable|disable|[category]] [enable|disable]`", ctx.guild)] });
+    }
 
     if (category === "enable") {
       await prisma.guildConfig.upsert({
@@ -58,6 +60,7 @@ export const logCommand: Command = {
         return ctx.reply({ embeds: [UniversalEmbed.error(`Usage: \`log ${category} [enable|disable]\``, ctx.guild)] }, 5);
       }
 
+      const logToggles = (config?.logToggles as Record<string, boolean>) ?? {};
       logToggles[category] = action === "enable";
       await prisma.guildConfig.upsert({
         where: { guildId: ctx.guild.id },

@@ -1,22 +1,14 @@
 import { EmbedBuilder, Guild } from "discord.js";
-import { getEmoji, EmojiName } from "../constants/emojis.js";
+import { EMOJIS } from "../config/emojis.js";
 
 export type EmbedTheme = "success" | "warning" | "error" | "info" | "neutral";
 
 export const THEME_COLORS: Record<EmbedTheme, number> = {
-  success: 0x2ecc71, // Green
+  success: 0x00FF87, // Neon Green
   warning: 0xf1c40f, // Gold/Yellow
-  error: 0xe74c3c,   // Crimson Red
+  error: 0xFF0055,   // Neon Red
   info: 0x3498db,    // Blue
   neutral: 0x36393f  // Dark Grey
-};
-
-export const THEME_EMOJIS: Record<EmbedTheme, EmojiName> = {
-  success: "success",
-  warning: "warning",
-  error: "error",
-  info: "info",
-  neutral: "member"
 };
 
 export class UniversalEmbed extends EmbedBuilder {
@@ -27,11 +19,16 @@ export class UniversalEmbed extends EmbedBuilder {
     this.setColor(color);
 
     if (description) {
-      const emojiPrefix = getEmoji(THEME_EMOJIS[theme], guild?.id);
+      let emojiKey: keyof typeof EMOJIS;
+      if (theme === "neutral") {
+        emojiKey = "info";
+      } else {
+        emojiKey = theme as keyof typeof EMOJIS;
+      }
+
+      const emojiPrefix = EMOJIS[emojiKey] || "";
       this.setDescription(`${emojiPrefix} ${description}`);
     }
-
-    this.setTimestamp();
   }
 
   static success(description: string, guild?: Guild): UniversalEmbed {

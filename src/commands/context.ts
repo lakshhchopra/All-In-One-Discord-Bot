@@ -9,6 +9,7 @@ import {
   MessageCreateOptions
 } from "discord.js";
 import { prisma } from "../services/db.js";
+import { UniversalEmbed } from "../services/embed.js";
 
 export class CommandContext {
   public readonly isInteraction: boolean;
@@ -62,7 +63,17 @@ export class CommandContext {
     } else {
       const message = this.source as Message;
       const payload = typeof content === "string" ? { content } : (content as MessageCreateOptions);
-      responseMessage = await message.reply(payload);
+      const cleanPayload = { ...payload } as any;
+      if ("ephemeral" in cleanPayload) {
+        delete cleanPayload.ephemeral;
+      }
+      try {
+        responseMessage = await message.reply(cleanPayload);
+      } catch {
+        try {
+          responseMessage = await (message.channel as any).send(cleanPayload);
+        } catch {}
+      }
     }
 
     if (autoDeleteSeconds && responseMessage) {
@@ -133,5 +144,16 @@ export class CommandContext {
     }
     const val = parseInt(this.args[index], 10);
     return isNaN(val) ? null : val;
+  }
+
+  wrongUsage(command: { name: string; usage?: string; examples?: string[] }) {
+    return this.reply({
+      embeds: [
+        UniversalEmbed.error(
+          `**Usage:** \`${this.prefix}${command.usage || command.name}\`\n**Example:** \`${this.prefix}${command.examples?.[0] || command.name}\``,
+          this.guild
+        )
+      ]
+    }, 5);
   }
 }
