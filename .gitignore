@@ -2,11 +2,18 @@ node_modules/
 dist/
 .env
 .env*.local
-dashboard/.next/
-dashboard/out/
-dashboard/build/
+.env prod
 *.log
 .DS_Store
 package-lock.json
-dashboard/package-lock.json
 .local_services/
+src.zip
+
+# Apps
+apps/bot/dist/
+apps/bot/node_modules/
+apps/dashboard/.next/
+apps/dashboard/out/
+apps/dashboard/build/
+apps/dashboard/node_modules/
+apps/dashboard/package-lock.json
