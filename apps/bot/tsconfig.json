@@ -4,8 +4,8 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "lib": ["ES2022"],
-    "outDir": "./apps/bot/dist",
-    "rootDir": "./apps/bot/src",
+    "outDir": "./dist",
+    "rootDir": "./src",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -13,6 +13,6 @@
     "resolveJsonModule": true,
     "declaration": true
   },
-  "include": ["apps/bot/src/**/*"],
-  "exclude": ["node_modules", "dist", "apps/dashboard"]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
 }
