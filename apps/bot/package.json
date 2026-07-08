@@ -9,7 +9,7 @@
     "build": "tsc",
     "start": "npm run build && node dist/index.js",
     "start:dev": "tsx src/index.ts",
-    "postinstall": "prisma generate --schema=../../prisma/schema.prisma"
+    "postinstall": "prisma generate --schema=./prisma/schema.prisma"
   },
   "dependencies": {
     "@napi-rs/canvas": "^0.1.53",
