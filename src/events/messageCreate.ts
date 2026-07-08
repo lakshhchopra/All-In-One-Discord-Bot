@@ -3,6 +3,8 @@ import { prisma } from "../services/db.js";
 import { CommandContext } from "../commands/context.js";
 import { handleCommand } from "../commands/command.js";
 import { UniversalEmbed } from "../services/embed.js";
+import { parseVariables } from "../services/utils/parser.js";
+import { parseEmbedPlaceholder } from "../services/utils/placeholder.js";
 
 export async function handleMessageCreate(message: Message) {
   if (message.author.bot || !message.guild) return;
@@ -16,6 +18,9 @@ export async function handleMessageCreate(message: Message) {
     update: {},
     create: { guildId }
   });
+
+  const guildConfig = await prisma.guildConfig.findUnique({ where: { guildId } });
+  const prefix = guildConfig?.prefix ?? "-";
 
   // 1. Increment Member Message Statistics
   await prisma.memberStats.upsert({
@@ -116,16 +121,28 @@ export async function handleMessageCreate(message: Message) {
 
     if (triggered) {
       if ("send" in message.channel) {
-        await message.channel.send(ar.response);
+        // Parse Mimu placeholder variables
+        const parsedText = parseVariables(ar.response, {
+          user: message.member ?? message.author,
+          guild: message.guild,
+          channelId: message.channel.id,
+          channelName: (message.channel as any).name,
+          prefix
+        });
+
+        // Parse custom {embed:name} placeholders
+        const finalPayload = await parseEmbedPlaceholder(parsedText, guildId);
+
+        await message.channel.send({
+          content: finalPayload.content || undefined,
+          embeds: finalPayload.embeds
+        });
       }
       return;
     }
   }
 
   // 5. Command prefix resolver
-  const config = await prisma.guildConfig.findUnique({ where: { guildId } });
-  const prefix = config?.prefix ?? "-";
-
   if (!message.content.startsWith(prefix)) return;
 
   const args = message.content.slice(prefix.length).trim().split(/ +/);

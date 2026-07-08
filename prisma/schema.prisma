@@ -67,6 +67,7 @@ model GuildConfig {
   whitelists        Whitelist[]
   extraOwners       ExtraOwner[]
   auditLogs         AuditLog[]
+  savedEmbeds       SavedEmbed[]
 }
 
 model MemberStats {
@@ -230,4 +231,18 @@ model CountState {
   lastUserId   String?
   highScore    Int      @default(0)
   updatedAt    DateTime @updatedAt
+}
+
+model SavedEmbed {
+  id        String   @id @default(uuid())
+  guildId   String
+  name      String
+  content   String?  @db.Text
+  embedData Json     // Serialized APIEmbed structure
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  guild     GuildConfig @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+
+  @@unique([guildId, name])
 }

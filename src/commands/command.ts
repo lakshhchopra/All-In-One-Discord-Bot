@@ -49,6 +49,19 @@ export async function handleCommand(ctx: CommandContext, commandName: string) {
   const command = CommandRegistry.get(commandName);
   if (!command) return;
 
+  // Pre-fetch non-cached members mentioned by ID or mention in prefix command arguments
+  if (!ctx.isInteraction && ctx.args.length > 0) {
+    for (const arg of ctx.args) {
+      const match = arg.match(/^<@!?(\d+)>$/) || arg.match(/^(\d{17,20})$/);
+      if (match) {
+        const userId = match[1];
+        if (!ctx.guild.members.cache.has(userId)) {
+          await ctx.guild.members.fetch(userId).catch(() => null);
+        }
+      }
+    }
+  }
+
   // 1. Permission check
   if (command.permissionLevel) {
     const allowed = await hasPermission(ctx.member, command.permissionLevel);

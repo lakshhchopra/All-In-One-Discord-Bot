@@ -95,6 +95,14 @@ export function broadcast(msg: any) {
 }
 
 export function startApiServer() {
+  server.on("error", (err: NodeJS.ErrnoException) => {
+    if (err.code === "EADDRINUSE") {
+      console.warn(`⚠️  Port ${config.PORT} already in use — API server skipped. Kill the old process and restart.`);
+    } else {
+      console.error("❌ API server error:", err);
+    }
+  });
+
   server.listen(config.PORT, () => {
     console.log(`📡 API & WebSocket Server running on port ${config.PORT}`);
   });

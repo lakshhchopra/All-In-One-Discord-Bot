@@ -21,6 +21,7 @@ import { registerGiveaway } from "./modules/giveaway/commands.js";
 import { registerGames } from "./modules/games/commands.js";
 import { registerInfo } from "./modules/info/commands.js";
 import { startApiServer } from "./services/api.js";
+import { startGiveawayScheduler } from "./modules/giveaway/scheduler.js";
 
 // Initialize Discord Client with appropriate intents
 const client = new Client({
@@ -78,6 +79,9 @@ client.once(Events.ClientReady, async (readyClient) => {
   // 1. Set bot activity presence and start update interval
   updateBotPresence(readyClient);
   setInterval(() => updateBotPresence(readyClient), 10 * 60 * 1000);
+
+  // 2. Start giveaway auto-end scheduler
+  startGiveawayScheduler(readyClient);
 });
 
 // Register Event Listeners

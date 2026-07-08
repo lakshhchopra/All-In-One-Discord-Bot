@@ -6,6 +6,7 @@ import { purgeCommand } from "./commands/purge.js";
 import { purgebotsCommand } from "./commands/purgebots.js";
 import { roleiconCommand } from "./commands/roleicon.js";
 import { roleCommand } from "./commands/role.js";
+import { rolealiasCommand } from "./commands/rolealias.js";
 import { roleallCommand } from "./commands/roleall.js";
 import { banCommand } from "./commands/ban.js";
 import { unbanCommand } from "./commands/unban.js";
@@ -31,6 +32,7 @@ export function registerModeration() {
   CommandRegistry.register(purgebotsCommand);
   CommandRegistry.register(roleiconCommand);
   CommandRegistry.register(roleCommand);
+  CommandRegistry.register(rolealiasCommand);
   CommandRegistry.register(roleallCommand);
   CommandRegistry.register(banCommand);
   CommandRegistry.register(unbanCommand);

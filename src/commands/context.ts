@@ -131,11 +131,22 @@ export class CommandContext {
     }
     const arg = this.args[index];
     if (!arg) return null;
-    const match = arg.match(/^<@&(\d+)>$/) || arg.match(/^(\d+)$/);
-    if (!match) return null;
-    const roleId = match[1];
-    return this.guild.roles.cache.get(roleId) || null;
+
+    // 1. Try mention <@&id>
+    const mentionMatch = arg.match(/^<@&(\d+)>$/);
+    if (mentionMatch) return this.guild.roles.cache.get(mentionMatch[1]) || null;
+
+    // 2. Try raw ID
+    const idMatch = arg.match(/^(\d{17,19})$/);
+    if (idMatch) return this.guild.roles.cache.get(idMatch[1]) || null;
+
+    // 3. Fall back to name search (case-insensitive, partial match)
+    const query = arg.toLowerCase();
+    return this.guild.roles.cache.find(r => r.name.toLowerCase() === query)
+      || this.guild.roles.cache.find(r => r.name.toLowerCase().includes(query))
+      || null;
   }
+
 
   getIntegerOption(name: string, index: number): number | null {
     if (this.isInteraction) {
