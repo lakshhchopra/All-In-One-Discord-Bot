@@ -1,7 +1,24 @@
-import { Guild, TextChannel, PermissionFlagsBits, ChannelType, ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
+import { Guild, TextChannel, PermissionFlagsBits, ChannelType, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from "discord.js";
 import { UniversalEmbed } from "../services/embed.js";
+import { sendSupportLog } from "../utils/supportLogger.js";
 
 export async function handleGuildCreate(guild: Guild) {
+  // Support Log
+  try {
+    const serverEmbed = new EmbedBuilder()
+      .setColor(0x00FF00)
+      .setTitle("📥 Bot Added to Server")
+      .setDescription(
+        `- **Guild:** ${guild.name} (${guild.id})\n` +
+        `- **Members:** ${guild.memberCount}\n` +
+        `- **Owner:** <@${guild.ownerId}> (${guild.ownerId})`
+      )
+      .setTimestamp();
+    await sendSupportLog(guild.client, "server", serverEmbed);
+  } catch (err) {
+    console.error("Failed to send support log on guild create:", err);
+  }
+
   let targetChannel: TextChannel | null = null;
 
   // 1. Try system channel first

@@ -18,7 +18,7 @@ async function boot() {
     await runCmd("npx", ["prisma", "db", "push", "--schema=./prisma/schema.prisma", "--accept-data-loss"]);
 
     console.log("🚀 [Bootstrap] Starting Discord Bot...");
-    await runCmd("npx", ["tsx", "src/index.ts"]);
+    await runCmd("node", ["dist/index.js"]);
   } catch (error) {
     console.error("❌ [Bootstrap] Failed to boot:", error);
     process.exit(1);

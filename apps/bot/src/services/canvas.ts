@@ -7,7 +7,8 @@ export async function drawWelcomeCard(
   avatarUrl: string,
   username: string,
   serverName: string,
-  memberCount: string
+  memberCount: string,
+  bgUrl?: string
 ): Promise<Buffer> {
   const canvas = createCanvas(800, 350);
   const ctx = canvas.getContext("2d");

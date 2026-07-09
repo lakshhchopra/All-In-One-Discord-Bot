@@ -14,7 +14,9 @@ const envSchema = z.object({
   DISCORD_CLIENT_ID: z.string(),
   DEFAULT_PREFIX: z.string().default("-"),
   DATABASE_URL: z.string(),
-  REDIS_URL: z.string().default("redis://localhost:6379")
+  REDIS_URL: z.string().default("redis://localhost:6379"),
+  PORT: z.coerce.number().default(3001),
+  SUPPORT_GUILD_ID: z.string().optional()
 });
 
 const parsed = envSchema.safeParse(process.env);

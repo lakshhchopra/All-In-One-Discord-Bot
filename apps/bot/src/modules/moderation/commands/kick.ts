@@ -1,6 +1,6 @@
-import { PermissionFlagsBits } from "discord.js";
 import { Command } from "../../../commands/command.js";
 import { UniversalEmbed } from "../../../services/embed.js";
+import { isWhitelisted } from "../../../utils/security.js";
 
 export const kickCommand: Command = {
   name: "kick",
@@ -10,8 +10,9 @@ export const kickCommand: Command = {
   usage: "kick <member> [reason]",
   examples: ["kick @member Trolling", "kick @member"],
   execute: async (ctx) => {
-    if (!ctx.member.permissions.has(PermissionFlagsBits.KickMembers)) {
-      return ctx.reply({ embeds: [UniversalEmbed.error("Permission missing: `Kick Members`", ctx.guild)] }, 5);
+    const whitelisted = await isWhitelisted(ctx.guild, ctx.user.id, "kick");
+    if (!whitelisted) {
+      return ctx.reply({ embeds: [UniversalEmbed.error("You are not authorized by the owner to kick members.", ctx.guild)] }, 5);
     }
 
     const target = ctx.getMemberOption("member", 0);

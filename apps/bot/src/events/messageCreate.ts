@@ -1,10 +1,12 @@
 import { Message, ChannelType } from "discord.js";
 import { prisma } from "../services/db.js";
 import { CommandContext } from "../commands/context.js";
+import { EMOJIS } from "../config/emojis.js";
 import { handleCommand } from "../commands/command.js";
 import { UniversalEmbed } from "../services/embed.js";
 import { parseVariables } from "../services/utils/parser.js";
 import { parseEmbedPlaceholder } from "../services/utils/placeholder.js";
+import { isWhitelisted } from "../utils/security.js";
 
 export async function handleMessageCreate(message: Message) {
   if (message.author.bot || !message.guild) return;
@@ -82,26 +84,62 @@ export async function handleMessageCreate(message: Message) {
   const countState = await prisma.countState.findUnique({ where: { guildId } });
   if (countState && message.channel.id === countState.channelId) {
     const val = parseInt(message.content, 10);
-    const expected = countState.currentCount + 1;
+    if (!isNaN(val)) {
+      const expected = countState.currentCount + 1;
 
-    if (isNaN(val) || val !== expected || countState.lastUserId === userId) {
-      // Wrong number or same user double counting -> reset count
-      await prisma.countState.update({
-        where: { guildId },
-        data: { currentCount: 0, lastUserId: null }
-      });
-      await message.react("❌");
-      await message.reply(`😭 **Wrong count!** The game has been reset to \`0\`. The next number is \`1\`.`);
-    } else {
-      // Correct count -> update count state
-      const newHighScore = expected > countState.highScore ? expected : countState.highScore;
-      await prisma.countState.update({
-        where: { guildId },
-        data: { currentCount: expected, lastUserId: userId, highScore: newHighScore }
-      });
-      await message.react("✅");
+      if (val !== expected || countState.lastUserId === userId) {
+        // Incorrect count (wrong number or consecutive count by same user)
+        // Give -1 to stats, do NOT reset count or streak
+        await prisma.countingStats.upsert({
+          where: { guildId_userId: { guildId, userId } },
+          update: { score: { decrement: 1 } },
+          create: { guildId, userId, score: -1 }
+        });
+        await message.react("❌").catch(() => null);
+      } else {
+        // Correct count
+        const newHighScore = expected > countState.highScore ? expected : countState.highScore;
+        await prisma.countState.update({
+          where: { guildId },
+          data: { currentCount: expected, lastUserId: userId, highScore: newHighScore }
+        });
+        await prisma.countingStats.upsert({
+          where: { guildId_userId: { guildId, userId } },
+          update: { score: { increment: 1 } },
+          create: { guildId, userId, score: 1 }
+        });
+        
+        // React with success emoji if accessible, else checkmark
+        const successEmojiId = EMOJIS.success.match(/:(\d+)>/)?.[1];
+        if (successEmojiId) {
+          await message.react(successEmojiId).catch(() => message.react("✅").catch(() => null));
+        } else {
+          await message.react("✅").catch(() => null);
+        }
+      }
+      return; // Don't allow command processing for number messages in counting channel
     }
-    return; // Don't allow command processing in counting channel
+  }
+
+  // Automod check
+  if (guildConfig && guildConfig.automodEnabled && guildConfig.blacklistedWords.length > 0) {
+    const isWl = await isWhitelisted(message.guild!, userId) || guildConfig.automodWhitelist.includes(userId);
+    if (!isWl) {
+      const lowerContent = message.content.toLowerCase();
+      const containsBlacklisted = guildConfig.blacklistedWords.some((word: string) => 
+        lowerContent.includes(word.toLowerCase())
+      );
+
+      if (containsBlacklisted) {
+        try {
+          await message.delete();
+          await (message.channel as any).send({
+            embeds: [UniversalEmbed.error(`${message.author}, your message contained blacklisted words and was deleted.`, message.guild!)]
+          }).then((msg: any) => setTimeout(() => msg.delete().catch(() => null), 5000));
+        } catch {}
+        return; // Halt execution
+      }
+    }
   }
 
   // 4. Autoresponder check
@@ -143,7 +181,53 @@ export async function handleMessageCreate(message: Message) {
   }
 
   // 5. Command prefix resolver
-  if (!message.content.startsWith(prefix)) return;
+  if (!message.content.startsWith(prefix)) {
+    // AutoReact
+    try {
+      const autoReacts = await prisma.autoReact.findMany({ where: { guildId } });
+      const lowerContent = message.content.toLowerCase();
+      for (const ar of autoReacts) {
+        if (lowerContent.includes(ar.trigger)) {
+          for (const emoji of ar.emojis) {
+            await message.react(emoji).catch(() => null);
+          }
+        }
+      }
+    } catch {}
+
+    // Sticky Message
+    try {
+      const sticky = await prisma.stickyMessage.findUnique({
+        where: { channelId: message.channel.id }
+      });
+
+      if (sticky) {
+        // Avoid infinite loop by ignoring bot's own sticky posts
+        if (message.author.id !== message.client.user?.id) {
+          if (sticky.lastMessageId) {
+            try {
+              const oldMsg = await message.channel.messages.fetch(sticky.lastMessageId);
+              await oldMsg.delete();
+            } catch {}
+          }
+
+          const sent = await (message.channel as any).send({
+            embeds: [
+              new UniversalEmbed("neutral", undefined, message.guild!)
+                .setDescription(`📌 **Sticky Message**\n\n${sticky.message}`)
+            ]
+          });
+
+          await prisma.stickyMessage.update({
+            where: { channelId: message.channel.id },
+            data: { lastMessageId: sent.id }
+          });
+        }
+      }
+    } catch {}
+
+    return;
+  }
 
   const args = message.content.slice(prefix.length).trim().split(/ +/);
   const commandName = args.shift()?.toLowerCase();
@@ -151,6 +235,7 @@ export async function handleMessageCreate(message: Message) {
 
   const ctx = new CommandContext(message, args);
   ctx.prefix = prefix;
+  ctx.commandName = commandName;
 
   await handleCommand(ctx, commandName);
 }

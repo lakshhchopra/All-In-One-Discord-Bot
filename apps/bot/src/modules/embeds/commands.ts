@@ -3,14 +3,23 @@ import { embedCommand } from "./commands/embed.js";
 import { variablesCommand } from "./commands/variables.js";
 import { autoresponderCommand } from "./commands/autoresponder.js";
 import { reactionroleCommand } from "./commands/reactionrole.js";
-import { listCommand } from "./commands/list.js";
+import { autoreactCommand } from "./commands/autoreact.js";
+import { stickyCommand } from "./commands/sticky.js";
 
-export { embedCommand, variablesCommand, autoresponderCommand, reactionroleCommand, listCommand };
+export {
+  embedCommand,
+  variablesCommand,
+  autoresponderCommand,
+  reactionroleCommand,
+  autoreactCommand,
+  stickyCommand
+};
 
 export function registerExtras() {
   CommandRegistry.register(embedCommand);
   CommandRegistry.register(variablesCommand);
   CommandRegistry.register(autoresponderCommand);
   CommandRegistry.register(reactionroleCommand);
-  CommandRegistry.register(listCommand);
+  CommandRegistry.register(autoreactCommand);
+  CommandRegistry.register(stickyCommand);
 }

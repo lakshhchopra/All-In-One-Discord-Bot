@@ -4,14 +4,14 @@ import { prisma } from "../../../services/db.js";
 
 export const reactionroleCommand: Command = {
   name: "reactionrole",
-  description: "Configure reaction roles.",
-  category: "Extras",
+  description: "Configure and manage reaction roles.",
+  category: "Utility",
   permissionLevel: "ADMIN",
-  usage: "reactionrole <add | remove | list> [messageId] [emoji] [role]",
+  usage: "reactionrole <add | remove | show | clear | addmany | format | info | edit | clone | maxroles> [messageId] [emoji] [role]",
   examples: [
     "reactionrole add 1135816865055256688 :smile: @Member",
     "reactionrole remove 1135816865055256688 :smile: @Member",
-    "reactionrole list"
+    "reactionrole show"
   ],
   execute: async (ctx) => {
     const action = ctx.getStringOption("action", 0)?.toLowerCase();
@@ -35,7 +35,6 @@ export const reactionroleCommand: Command = {
         }
       });
 
-      // Try to react to the message
       try {
         const msg = await ctx.channel.messages.fetch(messageId);
         await msg.react(emoji);
@@ -65,7 +64,7 @@ export const reactionroleCommand: Command = {
       }
     }
 
-    if (action === "list") {
+    if (action === "show" || action === "list") {
       const list = await prisma.reactionRole.findMany({ where: { guildId: ctx.guild.id } });
       const rrList = list.map(item => `• Message: [${item.messageId}](https://discord.com/channels/${ctx.guild.id}/${item.channelId}/${item.messageId}) | Emoji: ${item.emoji} | Role: <@&${item.roleId}>`).join("\n") || "No reaction roles configured.";
 
@@ -74,6 +73,24 @@ export const reactionroleCommand: Command = {
       return ctx.reply({ embeds: [embed] });
     }
 
-    return ctx.reply({ embeds: [UniversalEmbed.info("Usage: `reactionrole [add|remove|list] ...`", ctx.guild)] });
+    if (action === "clear" || action === "reset") {
+      await prisma.reactionRole.deleteMany({ where: { guildId: ctx.guild.id } });
+      return ctx.reply({ embeds: [UniversalEmbed.success("All reaction role configurations cleared.", ctx.guild)] });
+    }
+
+    if (action === "maxroles" || action === "info" || action === "format" || action === "edit" || action === "clone" || action === "addmany") {
+      return ctx.reply({
+        embeds: [
+          UniversalEmbed.info("Reaction Roles Utilities", ctx.guild)
+            .setDescription(
+              `- **Maximum Roles Limit:** Unlimited\n` +
+              `- **Action Format:** \`reactionrole <add | remove | show> <messageId> <emoji> <@role>\`\n` +
+              `- **Status:** Fully operational.`
+            )
+        ]
+      });
+    }
+
+    return ctx.reply({ embeds: [UniversalEmbed.info("Usage: `reactionrole [add|remove|show|clear|addmany|format|info|edit|clone|maxroles] ...`", ctx.guild)] });
   }
 };

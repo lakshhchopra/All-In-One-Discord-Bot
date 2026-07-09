@@ -1,16 +1,14 @@
 import { CommandRegistry } from "../../commands/command.js";
-import { setGreetCommand } from "./commands/setgreet.js";
-import { setBoostCommand } from "./commands/setboost.js";
+import { greetCommand } from "./commands/greet.js";
+import { leavemsgCommand } from "./commands/leavemsg.js";
+import { boostgreetCommand } from "./commands/boostgreet.js";
 import { autoroleCommand } from "./commands/autorole.js";
-import { testGreetCommand } from "./commands/testgreet.js";
-import { testBoostCommand } from "./commands/testboost.js";
 
-export { setGreetCommand, setBoostCommand, autoroleCommand, testGreetCommand, testBoostCommand };
+export { greetCommand, leavemsgCommand, boostgreetCommand, autoroleCommand };
 
 export function registerWelcome() {
-  CommandRegistry.register(setGreetCommand);
-  CommandRegistry.register(setBoostCommand);
+  CommandRegistry.register(greetCommand);
+  CommandRegistry.register(leavemsgCommand);
+  CommandRegistry.register(boostgreetCommand);
   CommandRegistry.register(autoroleCommand);
-  CommandRegistry.register(testGreetCommand);
-  CommandRegistry.register(testBoostCommand);
 }

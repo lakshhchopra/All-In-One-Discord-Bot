@@ -21,6 +21,10 @@ model GuildConfig {
   welcomeDmEnabled  Boolean  @default(false)
   welcomeImageBg    String?  // Canvas background image URL
   
+  // Leave Settings
+  leaveChannelId    String?
+  leaveMessage      String?
+
   // Boost Settings
   boostChannelId    String?
   boostMessage      String?
@@ -54,12 +58,20 @@ model GuildConfig {
   antiNukeLimits     Json    @default("{}") // Action limits (e.g. max channel delete/min)
   antiNukeAction     String  @default("demote") // demote, ban
 
+  // Additional Security & Automod fields
+  panicModeEnabled   Boolean @default(false)
+  automodEnabled     Boolean @default(false)
+  automodWhitelist   String[] @default([])
+  blacklistedWords   String[] @default([])
+  quarantineRoleId   String?
+
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
   // Relations
   members           MemberStats[]
   tempVcs           TempVC[]
+  tempVcGenerators  TempVCGenerator[]
   reactionRoles     ReactionRole[]
   autoresponders    AutoResponder[]
   panels            Panel[]
@@ -68,6 +80,10 @@ model GuildConfig {
   extraOwners       ExtraOwner[]
   auditLogs         AuditLog[]
   savedEmbeds       SavedEmbed[]
+  countingStats     CountingStats[]
+  ticketConfig      TicketConfig?
+  autoReacts        AutoReact[]
+  stickyMessages    StickyMessage[]
 }
 
 model MemberStats {
@@ -113,6 +129,16 @@ model TempVC {
   untrusted  String[]    @default([])
 
   guild      GuildConfig @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+}
+
+model TempVCGenerator {
+  channelId    String      @id
+  guildId      String
+  nameTemplate String      @default("{username}'s Channel")
+  userLimit    Int         @default(0)
+  categoryId   String?
+
+  guild        GuildConfig @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
 }
 
 model InviteLog {
@@ -245,4 +271,49 @@ model SavedEmbed {
   guild     GuildConfig @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
 
   @@unique([guildId, name])
+}
+
+model CountingStats {
+  id        String   @id @default(uuid())
+  guildId   String
+  userId    String
+  score     Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  guild     GuildConfig @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+
+  @@unique([guildId, userId])
+}
+
+model TicketConfig {
+  guildId       String  @id
+  categoryId    String?
+  supportRoleId String?
+  channelId     String?
+  messageId     String?
+
+  guild         GuildConfig @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+}
+
+model AutoReact {
+  id        String   @id @default(uuid())
+  guildId   String
+  trigger   String
+  emojis    String[]
+  createdAt DateTime @default(now())
+
+  guild     GuildConfig @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+
+  @@unique([guildId, trigger])
+}
+
+model StickyMessage {
+  id            String   @id @default(uuid())
+  guildId       String
+  channelId     String   @unique
+  message       String   @db.Text
+  lastMessageId String?
+  createdAt     DateTime @default(now())
+
+  guild         GuildConfig @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
 }

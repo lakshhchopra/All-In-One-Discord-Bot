@@ -38,7 +38,8 @@ export async function handleGuildMemberAdd(member: GuildMember) {
           avatarUrl,
           member.user.username,
           guild.name,
-          String(guild.memberCount)
+          String(guild.memberCount),
+          config.welcomeImageBg || undefined
         );
 
         const attachment = new AttachmentBuilder(canvasBuffer, { name: "welcome.png" });

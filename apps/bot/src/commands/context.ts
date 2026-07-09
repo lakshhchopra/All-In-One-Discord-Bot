@@ -1,5 +1,6 @@
 import {
   ChatInputCommandInteraction,
+  Client,
   Message,
   Guild,
   GuildMember,
@@ -17,8 +18,10 @@ export class CommandContext {
   public readonly member: GuildMember;
   public readonly user: User;
   public readonly channel: TextBasedChannel;
+  public readonly client: Client;
   public readonly args: string[];
   public prefix: string = "-";
+  public commandName: string = "";
 
   constructor(
     public readonly source: Message | ChatInputCommandInteraction,
@@ -31,7 +34,11 @@ export class CommandContext {
       ? (source as ChatInputCommandInteraction).user
       : (source as Message).author;
     this.channel = source.channel!;
+    this.client = source.client;
     this.args = args;
+    if (this.isInteraction) {
+      this.commandName = (source as ChatInputCommandInteraction).commandName;
+    }
   }
 
   async initPrefix() {

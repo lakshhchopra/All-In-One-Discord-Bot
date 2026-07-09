@@ -6,6 +6,7 @@ export const membercountCommand: Command = {
   description: "View detailed server member count.",
   category: "Information",
   usage: "membercount",
+  aliases: ["mc"],
   examples: ["membercount"],
   execute: async (ctx) => {
     const total = ctx.guild.memberCount;

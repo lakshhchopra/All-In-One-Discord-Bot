@@ -1,6 +1,6 @@
-import { PermissionFlagsBits } from "discord.js";
 import { Command } from "../../../commands/command.js";
 import { UniversalEmbed } from "../../../services/embed.js";
+import { isWhitelisted } from "../../../utils/security.js";
 
 export const banCommand: Command = {
   name: "ban",
@@ -10,8 +10,9 @@ export const banCommand: Command = {
   usage: "ban <member> [reason]",
   examples: ["ban @member Spamming", "ban @member"],
   execute: async (ctx) => {
-    if (!ctx.member.permissions.has(PermissionFlagsBits.BanMembers)) {
-      return ctx.reply({ embeds: [UniversalEmbed.error("Permission missing: `Ban Members`", ctx.guild)] }, 5);
+    const whitelisted = await isWhitelisted(ctx.guild, ctx.user.id, "ban");
+    if (!whitelisted) {
+      return ctx.reply({ embeds: [UniversalEmbed.error("You are not authorized by the owner to ban members.", ctx.guild)] }, 5);
     }
 
     const target = ctx.getMemberOption("member", 0);

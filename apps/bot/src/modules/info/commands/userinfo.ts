@@ -7,6 +7,7 @@ export const userinfoCommand: Command = {
   description: "Get detailed information about a member.",
   category: "Information",
   usage: "userinfo [member]",
+  aliases: ["ui"],
   examples: ["userinfo", "userinfo @member", "userinfo 982232494223020042"],
   execute: async (ctx) => {
     const member = ctx.getMemberOption("member", 0) || ctx.member;

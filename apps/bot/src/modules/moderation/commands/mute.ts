@@ -1,7 +1,7 @@
-import { PermissionFlagsBits } from "discord.js";
 import { Command } from "../../../commands/command.js";
 import { UniversalEmbed } from "../../../services/embed.js";
 import { parseDuration, DURATION_FORMAT_ERROR } from "../../../utils/duration.js";
+import { isWhitelisted } from "../../../utils/security.js";
 
 // Discord timeout max = 28 days
 const MAX_TIMEOUT_MS = 28 * 24 * 60 * 60 * 1000;
@@ -19,8 +19,9 @@ export const muteCommand: Command = {
     "mute @member 1d Breaking rules"
   ],
   execute: async (ctx) => {
-    if (!ctx.member.permissions.has(PermissionFlagsBits.ModerateMembers)) {
-      return ctx.reply({ embeds: [UniversalEmbed.error("Permission missing: `Moderate Members`", ctx.guild)] }, 5);
+    const whitelisted = await isWhitelisted(ctx.guild, ctx.user.id, "mute");
+    if (!whitelisted) {
+      return ctx.reply({ embeds: [UniversalEmbed.error("You are not authorized by the owner to mute members.", ctx.guild)] }, 5);
     }
 
     const member = ctx.getMemberOption("member", 0);

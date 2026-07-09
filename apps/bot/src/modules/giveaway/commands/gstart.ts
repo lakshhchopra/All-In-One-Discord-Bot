@@ -1,8 +1,9 @@
 import { Command } from "../../../commands/command.js";
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, TextChannel } from "discord.js";
+import { EmbedBuilder, TextChannel } from "discord.js";
 import { prisma } from "../../../services/db.js";
 import { UniversalEmbed } from "../../../services/embed.js";
 import { parseDuration, DURATION_FORMAT_ERROR } from "../../../utils/duration.js";
+import { EMOJIS } from "../../../config/emojis.js";
 
 export const gstartCommand: Command = {
   name: "gstart",
@@ -50,19 +51,11 @@ export const gstartCommand: Command = {
       )
       .setColor(0x5865f2)
       .setThumbnail(serverIcon)
-      .setFooter({ text: "Click 🎉 to enter • Ends at" })
+      .setFooter({ text: "React to enter • Ends at" })
       .setTimestamp(endsAt);
 
-
-    const joinButton = new ButtonBuilder()
-      .setCustomId("giveaway_join")
-      .setLabel("Join (0)")
-      .setEmoji("🎉")
-      .setStyle(ButtonStyle.Primary);
-
-    const row = new ActionRowBuilder<ButtonBuilder>().addComponents(joinButton);
-
-    const msg = await channel.send({ embeds: [embed], components: [row] });
+    const msg = await channel.send({ embeds: [embed] });
+    await msg.react(EMOJIS.gwy);
 
     await prisma.giveaway.create({
       data: {

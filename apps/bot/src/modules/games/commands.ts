@@ -1,12 +1,14 @@
 import { CommandRegistry } from "../../commands/command.js";
-import { setCountChannelCommand } from "./commands/setcountchannel.js";
-import { lbCountCommand } from "./commands/lbcount.js";
+import { countingCommand } from "./commands/counting.js";
+import { lbCommand } from "./commands/lb.js";
+import { countCommand } from "./commands/count.js";
 import { shipCommand } from "./commands/ship.js";
 
-export { setCountChannelCommand, lbCountCommand, shipCommand };
+export { countingCommand, lbCommand, countCommand, shipCommand };
 
 export function registerGames() {
-  CommandRegistry.register(setCountChannelCommand);
-  CommandRegistry.register(lbCountCommand);
+  CommandRegistry.register(countingCommand);
+  CommandRegistry.register(lbCommand);
+  CommandRegistry.register(countCommand);
   CommandRegistry.register(shipCommand);
 }

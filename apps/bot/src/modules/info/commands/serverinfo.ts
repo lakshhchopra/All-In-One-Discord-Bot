@@ -5,6 +5,7 @@ export const serverinfoCommand: Command = {
   name: "serverinfo",
   description: "Get detailed information about the server.",
   category: "Information",
+  aliases: ["si"],
   usage: "serverinfo",
   examples: ["serverinfo"],
   execute: async (ctx) => {
