@@ -35,6 +35,7 @@ import { registerInfo } from "./modules/info/commands.js";
 import { registerTickets } from "./modules/tickets/commands.js";
 import { startGiveawayScheduler } from "./modules/giveaway/scheduler.js";
 
+// Gupshup - The All-In-One Discord Bot
 // Initialize Discord Client with appropriate intents
 const client = new Client({
   intents: [
