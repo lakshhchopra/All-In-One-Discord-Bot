@@ -1,9 +1,11 @@
 import { Command } from "../../../commands/command.js";
-import { prisma } from "../../../services/db.js";
 import { UniversalEmbed } from "../../../services/embed.js";
-import { parseVariables, parseObjectVariables } from "../../../services/utils/parser.js";
-import { parseEmbedPlaceholder } from "../../../services/utils/placeholder.js";
-import { ChannelType } from "discord.js";
+import { executeEnable } from "./subcommands/leavemsg/enable.js";
+import { executeDisable } from "./subcommands/leavemsg/disable.js";
+import { executeSet } from "./subcommands/leavemsg/set.js";
+import { executeShow } from "./subcommands/leavemsg/show.js";
+import { executeReset } from "./subcommands/leavemsg/reset.js";
+import { executeTest } from "./subcommands/leavemsg/test.js";
 
 export const leavemsgCommand: Command = {
   name: "leavemsg",
@@ -14,126 +16,47 @@ export const leavemsgCommand: Command = {
   examples: [
     "leavemsg enable",
     "leavemsg set Good bye {user}!",
-    "leavemsg show"
+    "leavemsg set #goodbyes Good bye {user}!",
+    "leavemsg show",
+    "leavemsg reset",
+    "leavemsg test"
   ],
   execute: async (ctx) => {
     const action = ctx.getStringOption("action", 0)?.toLowerCase();
 
-    if (action === "enable") {
-      const config = await prisma.guildConfig.findUnique({ where: { guildId: ctx.guild.id } });
-      let channelId = config?.leaveChannelId;
-      if (!channelId) {
-        // Fallback: look for a channel named leave or goodbye
-        const channel = ctx.guild.channels.cache.find(c =>
-          (c.name.includes("leave") || c.name.includes("goodbye") || c.name.includes("welcome")) &&
-          c.type === ChannelType.GuildText
+    if (!action) {
+      const helpEmbed = UniversalEmbed.info("Welcomer - Leavemsg Command Help", ctx.guild)
+        .setDescription(
+          `• \`leavemsg enable\` - Enable leave messages in a text channel.\n` +
+          `• \`leavemsg disable\` - Disable leave messages.\n` +
+          `• \`leavemsg set <text>\` - Set the leave message template.\n` +
+          `• \`leavemsg set <#channel> <text>\` - Set target channel and message template.\n` +
+          `• \`leavemsg show\` - View the current leave messaging configuration.\n` +
+          `• \`leavemsg reset\` - Reset leave messaging configuration.\n` +
+          `• \`leavemsg test\` - Send a test leave message to the configured channel.`
         );
-        if (channel) channelId = channel.id;
-      }
-
-      await prisma.guildConfig.upsert({
-        where: { guildId: ctx.guild.id },
-        update: { leaveChannelId: channelId },
-        create: { guildId: ctx.guild.id, leaveChannelId: channelId }
-      });
-
-      return ctx.reply({ embeds: [UniversalEmbed.success(`Leave messages **enabled**. Active channel: <#${channelId || "Not configured"}>`, ctx.guild)] });
+      return ctx.reply({ embeds: [helpEmbed] });
     }
 
+    if (action === "enable") {
+      return executeEnable(ctx);
+    }
     if (action === "disable") {
-      await prisma.guildConfig.upsert({
-        where: { guildId: ctx.guild.id },
-        update: { leaveChannelId: null },
-        create: { guildId: ctx.guild.id, leaveChannelId: null }
-      });
-      return ctx.reply({ embeds: [UniversalEmbed.success("Leave messages **disabled**.", ctx.guild)] });
+      return executeDisable(ctx);
     }
-
     if (action === "set") {
-      const msg = ctx.args.slice(1).join(" ");
-      if (!msg) {
-        return ctx.reply({ embeds: [UniversalEmbed.error("Please specify a leave message template. Example: `Goodbye {user}!`", ctx.guild)] }, 5);
-      }
-
-      // Check if first argument is channel
-      const channel = ctx.getChannelOption("value", 1);
-      if (channel) {
-        const textMsg = ctx.args.slice(2).join(" ");
-        await prisma.guildConfig.upsert({
-          where: { guildId: ctx.guild.id },
-          update: { leaveChannelId: channel.id, leaveMessage: textMsg || null },
-          create: { guildId: ctx.guild.id, leaveChannelId: channel.id, leaveMessage: textMsg || null }
-        });
-        return ctx.reply({ embeds: [UniversalEmbed.success(`Leave channel set to ${channel} and message template updated.`, ctx.guild)] });
-      }
-
-      await prisma.guildConfig.upsert({
-        where: { guildId: ctx.guild.id },
-        update: { leaveMessage: msg },
-        create: { guildId: ctx.guild.id, leaveMessage: msg }
-      });
-
-      return ctx.reply({ embeds: [UniversalEmbed.success(`Leave message template set to: \`${msg}\``, ctx.guild)] });
+      return executeSet(ctx);
     }
-
     if (action === "show") {
-      const config = await prisma.guildConfig.findUnique({ where: { guildId: ctx.guild.id } });
-      return ctx.reply({
-        embeds: [
-          UniversalEmbed.info("Leave Message Configuration", ctx.guild)
-            .setDescription(
-              `- **Status:** ${config?.leaveChannelId ? "🟢 Enabled" : "🔴 Disabled"}\n` +
-              `- **Channel:** <#${config?.leaveChannelId || "Not set"}>\n` +
-              `- **Message Template:** \`${config?.leaveMessage || "Goodbye {user}!"}\``
-            )
-        ]
-      });
+      return executeShow(ctx);
     }
-
     if (action === "reset") {
-      await prisma.guildConfig.upsert({
-        where: { guildId: ctx.guild.id },
-        update: { leaveChannelId: null, leaveMessage: null },
-        create: { guildId: ctx.guild.id, leaveChannelId: null, leaveMessage: null }
-      });
-      return ctx.reply({ embeds: [UniversalEmbed.success("Leave message configuration reset.", ctx.guild)] });
+      return executeReset(ctx);
     }
-
     if (action === "test") {
-      const config = await prisma.guildConfig.findUnique({ where: { guildId: ctx.guild.id } });
-      const channelId = config?.leaveChannelId;
-      if (!channelId) {
-        return ctx.reply({ embeds: [UniversalEmbed.error("Please configure and enable leave messages first.", ctx.guild)] }, 5);
-      }
-
-      const text = config.leaveMessage || "Goodbye {user}!";
-      const parsedMessage = parseVariables(text, { user: ctx.member || ctx.user, guild: ctx.guild });
-
-      const channel = ctx.guild.channels.cache.get(channelId);
-      if (channel && "send" in channel) {
-        let sendPayload: any = {};
-
-        if (parsedMessage.includes("{embed:") || parsedMessage.includes("{EMBED:")) {
-          const res = await parseEmbedPlaceholder(parsedMessage, ctx.guild.id);
-          let embeds = res.embeds || [];
-          if (embeds.length > 0) {
-            embeds = embeds.map(emb => parseObjectVariables(emb, { user: ctx.member || ctx.user, guild: ctx.guild }));
-          }
-          sendPayload = {
-            content: res.content || undefined,
-            embeds
-          };
-        } else {
-          sendPayload = { content: parsedMessage };
-        }
-
-        await (channel as any).send(sendPayload);
-        return ctx.reply({ embeds: [UniversalEmbed.success("Sent test leave message.", ctx.guild)] });
-      }
-
-      return ctx.reply({ embeds: [UniversalEmbed.error("Configured leave channel is not accessible.", ctx.guild)] }, 5);
+      return executeTest(ctx);
     }
 
-    return ctx.reply({ embeds: [UniversalEmbed.info("Usage: `leavemsg [enable|disable|set|show|reset|test] [value]`", ctx.guild)] });
+    return ctx.reply({ embeds: [UniversalEmbed.error(`Unknown subcommand action \`${action}\`. Use \`leavemsg\` to see valid options.`, ctx.guild)] }, 5);
   }
 };

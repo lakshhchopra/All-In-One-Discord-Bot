@@ -3,6 +3,7 @@ import { config } from "./config/index.js";
 import { loadApplicationEmojis } from "./config/emojis.js";
 import { connectDatabase } from "./services/db.js";
 import { handleMessageCreate } from "./events/messageCreate.js";
+import { initInviteTracker, cacheGuildInvites } from "./services/invites.js";
 import { handleInteractionCreate } from "./events/interactionCreate.js";
 import { handleGuildMemberAdd } from "./events/guildMemberAdd.js";
 import { handleVoiceStateUpdate } from "./events/voiceStateUpdate.js";
@@ -23,11 +24,11 @@ import { registerModeration } from "./modules/moderation/commands.js";
 import { registerTempVc } from "./modules/tempvc/commands.js";
 import { registerVoiceMod } from "./modules/voicemod/commands.js";
 import { registerExtras } from "./modules/embeds/commands.js";
+import { registerUtility } from "./modules/utility/commands.js";
 import { registerLogging } from "./modules/logging/commands.js";
 import { registerSecurity } from "./modules/security/commands.js";
 import { registerAntiRaid } from "./modules/antiraid/commands.js";
-import { registerInvites } from "./modules/invites/commands.js";
-import { registerMessages } from "./modules/messages/commands.js";
+import { registerInvitesMessages } from "./modules/invites-messages/commands.js";
 import { registerGiveaway } from "./modules/giveaway/commands.js";
 import { registerGames } from "./modules/games/commands.js";
 import { registerInfo } from "./modules/info/commands.js";
@@ -55,11 +56,11 @@ registerModeration();
 registerTempVc();
 registerVoiceMod();
 registerExtras();
+registerUtility();
 registerLogging();
 registerSecurity();
 registerAntiRaid();
-registerInvites();
-registerMessages();
+registerInvitesMessages();
 registerGiveaway();
 registerGames();
 registerInfo();
@@ -99,6 +100,9 @@ client.once(Events.ClientReady, async (readyClient) => {
 
   // 2. Start giveaway auto-end scheduler
   startGiveawayScheduler(readyClient);
+
+  // 3. Initialize invites tracker cache
+  await initInviteTracker(readyClient);
 });
 
 // Register Event Listeners
@@ -106,7 +110,16 @@ client.on(Events.MessageCreate, handleMessageCreate);
 client.on(Events.InteractionCreate, handleInteractionCreate);
 client.on(Events.GuildMemberAdd, handleGuildMemberAdd);
 client.on(Events.VoiceStateUpdate, handleVoiceStateUpdate);
-client.on(Events.GuildCreate, handleGuildCreate);
+client.on(Events.GuildCreate, (guild) => {
+  handleGuildCreate(guild);
+  cacheGuildInvites(guild);
+});
+client.on(Events.InviteCreate, (invite) => {
+  if (invite.guild) cacheGuildInvites(invite.guild as any);
+});
+client.on(Events.InviteDelete, (invite) => {
+  if (invite.guild) cacheGuildInvites(invite.guild as any);
+});
 client.on(Events.MessageReactionAdd, handleMessageReactionAdd);
 client.on(Events.MessageReactionRemove, handleMessageReactionRemove);
 client.on(Events.ChannelDelete, handleChannelDelete);

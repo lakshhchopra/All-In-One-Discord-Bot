@@ -143,68 +143,212 @@ export async function drawBoostCard(
 
 export async function drawLeaderboardCard(
   title: string,
-  entries: { username: string; value: string | number }[]
+  entries: { username: string; value: string | number; avatarUrl?: string }[]
 ): Promise<Buffer> {
-  const canvas = createCanvas(600, 500);
+  const canvas = createCanvas(700, 640);
   const ctx = canvas.getContext("2d");
 
-  // Draw card background
-  ctx.fillStyle = "#0f172a";
-  ctx.fillRect(0, 0, 600, 500);
+  // Helper to draw rounded rectangle panels (pill/capsule shape with r = 26)
+  const drawRoundedRect = (x: number, y: number, w: number, h: number, r: number, color: any) => {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+    ctx.fill();
+  };
 
-  ctx.strokeStyle = "#3b82f6"; // Blue border
-  ctx.lineWidth = 4;
-  ctx.strokeRect(5, 5, 590, 490);
+  // Helper to draw a simple message outline bubble icon
+  const drawSpeechBubbleIcon = (x: number, y: number) => {
+    ctx.save();
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.85)";
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    const w = 18;
+    const h = 13;
+    const r = 3;
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    // Simple bottom-right tail point
+    ctx.lineTo(x + w - 4, y + h + 3);
+    ctx.lineTo(x + w - 7, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+    ctx.stroke();
+    ctx.restore();
+  };
 
-  // Draw Title
-  ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 32px Arial";
-  ctx.textAlign = "center";
-  ctx.fillText(title, 300, 50);
+  // Helper to draw a user silhouette icon for invites
+  const drawUserIcon = (x: number, y: number) => {
+    ctx.save();
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.85)";
+    ctx.lineWidth = 1.8;
+    // Head
+    ctx.beginPath();
+    ctx.arc(x + 9, y + 4, 3.5, 0, Math.PI * 2);
+    ctx.stroke();
+    // Shoulders
+    ctx.beginPath();
+    ctx.arc(x + 9, y + 14, 7, Math.PI, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  };
 
-  // Draw separator line
-  ctx.strokeStyle = "#1e293b";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(30, 75);
-  ctx.lineTo(570, 75);
-  ctx.stroke();
+  // Helper to draw a counting target icon
+  const drawCountingIcon = (x: number, y: number) => {
+    ctx.save();
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.85)";
+    ctx.lineWidth = 1.8;
+    // Simple grid/hashtag lines
+    ctx.beginPath();
+    ctx.moveTo(x + 5, y);
+    ctx.lineTo(x + 5, y + 14);
+    ctx.moveTo(x + 11, y);
+    ctx.lineTo(x + 11, y + 14);
+    ctx.moveTo(x, y + 5);
+    ctx.lineTo(x + 16, y + 5);
+    ctx.moveTo(x, y + 11);
+    ctx.lineTo(x + 16, y + 11);
+    ctx.stroke();
+    ctx.restore();
+  };
 
-  // Draw entries
-  ctx.textAlign = "left";
-  let y = 120;
-  for (let i = 0; i < 7; i++) {
+  // No overall filled background rectangle - allows canvas transparency!
+
+  // Determine icon type based on title
+  const isInvites = title.includes("INVITE");
+  const isCounting = title.includes("COUNTING");
+
+  // 3. Draw entries
+  let y = 10;
+  for (let i = 0; i < 10; i++) {
     const entry = entries[i];
     const rank = i + 1;
 
-    // Background panel for each row
-    ctx.fillStyle = rank === 1 ? "#1e293b" : "#131b2e";
-    ctx.fillRect(25, y - 30, 550, 45);
+    // Draw row background panel with fully rounded capsule ends (radius 26)
+    drawRoundedRect(24, y, 652, 52, 26, "#1b1e26");
 
-    // Rank text
-    ctx.font = "bold 20px Arial";
-    ctx.fillStyle = rank === 1 ? "#fbbf24" : rank === 2 ? "#cbd5e1" : rank === 3 ? "#b45309" : "#64748b";
-    ctx.fillText(`#${rank}`, 40, y);
+    // Avatar center coordinates
+    const cx = 56;
+    const cy = y + 26;
+    const r = 19; // fully circular fits in 52px height
 
-    // Username & Value
+    // Draw Rank and separators
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+    ctx.font = "bold 18px system-ui, -apple-system, sans-serif";
+
+    let rankColor = "#7e8395"; // Rank 4+ default gray
+    if (rank === 1) rankColor = "#ffb800"; // Rank 1 Gold
+    else if (rank === 2) rankColor = "#cbd5e1"; // Rank 2 Silver
+    else if (rank === 3) rankColor = "#d97706"; // Rank 3 Bronze/Orange
+
+    ctx.fillStyle = rankColor;
+    ctx.fillText(`#${rank}`, 92, cy);
+
+    ctx.fillStyle = "#475569";
+    ctx.font = "18px system-ui, -apple-system, sans-serif";
+    ctx.fillText("•", 128, cy);
+
     if (entry) {
-      ctx.fillStyle = "#f8fafc";
-      ctx.font = "18px Arial";
-      const displayUsername = entry.username.length > 20 ? entry.username.substring(0, 20) + "..." : entry.username;
-      ctx.fillText(displayUsername, 90, y);
+      // Draw Circular Avatar
+      ctx.save();
+      // Draw outer avatar ring
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 2, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(255, 255, 255, 0.15)";
+      ctx.fill();
 
-      ctx.fillStyle = "#38bdf8";
-      ctx.font = "bold 18px Arial";
-      ctx.textAlign = "right";
-      ctx.fillText(String(entry.value), 550, y);
+      // Clip for avatar
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.clip();
+
+      if (entry.avatarUrl) {
+        try {
+          const img = await loadImage(entry.avatarUrl);
+          ctx.drawImage(img, cx - r, cy - r, r * 2, r * 2);
+        } catch {
+          // Fallback letter avatar
+          ctx.fillStyle = "#334155";
+          ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+          ctx.fillStyle = "#ffffff";
+          ctx.font = "bold 16px system-ui, -apple-system, sans-serif";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(entry.username.charAt(0).toUpperCase(), cx, cy);
+        }
+      } else {
+        // Fallback letter avatar
+        ctx.fillStyle = "#334155";
+        ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 16px system-ui, -apple-system, sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(entry.username.charAt(0).toUpperCase(), cx, cy);
+      }
+      ctx.restore();
+
+      // Username
       ctx.textAlign = "left";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 18px system-ui, -apple-system, sans-serif";
+      
+      // Trim username if too long
+      let displayUsername = entry.username;
+      const maxUsernameWidth = 310;
+      if (ctx.measureText(displayUsername).width > maxUsernameWidth) {
+        while (ctx.measureText(displayUsername + "...").width > maxUsernameWidth && displayUsername.length > 0) {
+          displayUsername = displayUsername.slice(0, -1);
+        }
+        displayUsername += "...";
+      }
+      ctx.fillText(displayUsername, 148, cy);
+
+      // Score Value
+      ctx.textAlign = "right";
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 18px system-ui, -apple-system, sans-serif";
+      ctx.fillText(String(entry.value), 632, cy);
+
+      // Icon
+      const iconX = 648;
+      const iconY = y + 19;
+      if (isInvites) {
+        drawUserIcon(iconX, iconY);
+      } else if (isCounting) {
+        drawCountingIcon(iconX, iconY);
+      } else {
+        drawSpeechBubbleIcon(iconX, iconY);
+      }
     } else {
+      // Empty slot placeholder avatar
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fillStyle = "#1e293b";
+      ctx.fill();
+
       ctx.fillStyle = "#475569";
-      ctx.font = "italic 16px Arial";
-      ctx.fillText("Empty Slot", 90, y);
+      ctx.font = "italic 16px system-ui, -apple-system, sans-serif";
+      ctx.fillText("Empty Slot", 148, cy);
     }
 
-    y += 55;
+    y += 62; // panel height (52) + gap (10)
   }
 
   return canvas.toBuffer("image/png");

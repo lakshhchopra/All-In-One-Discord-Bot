@@ -1,5 +1,5 @@
 import { CommandRegistry } from "../../commands/command.js";
-import { gstartCommand } from "./commands/gstart.js";
+import { gcreateCommand } from "./commands/gcreate.js";
 import { gendCommand } from "./commands/gend.js";
 import { grerollCommand } from "./commands/greroll.js";
 import { gpauseCommand } from "./commands/gpause.js";
@@ -7,7 +7,7 @@ import { gresumeCommand } from "./commands/gresume.js";
 import { gparticipantsCommand } from "./commands/gparticipants.js";
 
 export {
-  gstartCommand,
+  gcreateCommand,
   gendCommand,
   grerollCommand,
   gpauseCommand,
@@ -16,7 +16,7 @@ export {
 };
 
 export function registerGiveaway() {
-  CommandRegistry.register(gstartCommand);
+  CommandRegistry.register(gcreateCommand);
   CommandRegistry.register(gendCommand);
   CommandRegistry.register(grerollCommand);
   CommandRegistry.register(gpauseCommand);

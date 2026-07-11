@@ -103,7 +103,7 @@ export const CATEGORY_DETAILS: Record<string, string> = {
 
   embed_system:
     `> **Embed Commands**\n` +
-    `\`embed\`, \`embed edit\`, \`embed import\`, \`embed save\`, \`embed export\`, \`embed create\`, \`embed guide\`, \`embed delete\`, \`embed show\`, \`embed send\`, \`embed rename\`, \`variables\``,
+    `\`embed\`, \`embed edit\`, \`embed import\`, \`embed save\`, \`embed export\`, \`embed create\`, \`embed list\`, \`embed delete\`, \`embed show\`, \`embed send\`, \`embed rename\`, \`variables\``,
 
   utility:
     `> **Reaction Role**\n` +

@@ -2,10 +2,10 @@ import { Message, ChannelType } from "discord.js";
 import { prisma } from "../services/db.js";
 import { CommandContext } from "../commands/context.js";
 import { EMOJIS } from "../config/emojis.js";
-import { handleCommand } from "../commands/command.js";
+import { handleCommand, CommandRegistry } from "../commands/command.js";
 import { UniversalEmbed } from "../services/embed.js";
 import { parseVariables } from "../services/utils/parser.js";
-import { parseEmbedPlaceholder } from "../services/utils/placeholder.js";
+import { parseFunctions, executeSend } from "../services/utils/placeholder.js";
 import { isWhitelisted } from "../utils/security.js";
 
 export async function handleMessageCreate(message: Message) {
@@ -159,29 +159,51 @@ export async function handleMessageCreate(message: Message) {
 
     if (triggered) {
       if ("send" in message.channel) {
-        // Parse Mimu placeholder variables
-        const parsedText = parseVariables(ar.response, {
+        const parserCtx = {
           user: message.member ?? message.author,
           guild: message.guild,
           channelId: message.channel.id,
           channelName: (message.channel as any).name,
-          prefix
-        });
+          prefix,
+          message
+        };
 
-        // Parse custom {embed:name} placeholders
-        const finalPayload = await parseEmbedPlaceholder(parsedText, guildId);
+        // Parse Mimu placeholder variables
+        const parsedText = parseVariables(ar.response, parserCtx);
 
-        await message.channel.send({
-          content: finalPayload.content || undefined,
-          embeds: finalPayload.embeds
-        });
+        // Parse custom placeholders and functions
+        const finalPayload = await parseFunctions(parsedText, guildId, parserCtx);
+
+        // Send response and execute functional actions
+        await executeSend(message.channel, finalPayload, message.member ?? message.author, message.guild, message);
       }
       return;
     }
   }
 
   // 5. Command prefix resolver
-  if (!message.content.startsWith(prefix)) {
+  let hasPrefix = true;
+  let commandString = "";
+
+  if (message.content.startsWith(prefix)) {
+    commandString = message.content.slice(prefix.length);
+  } else {
+    // Check if user has no-prefix enabled in this guild
+    const isNoPrefix = await prisma.whitelist.findUnique({
+      where: { guildId_targetId: { guildId, targetId: message.author.id } }
+    }).then(w => w?.type === "noprefix").catch(() => false);
+
+    if (isNoPrefix) {
+      const tempArgs = message.content.trim().split(/ +/);
+      const tempCommandName = tempArgs[0]?.toLowerCase();
+      if (tempCommandName && CommandRegistry.get(tempCommandName)) {
+        commandString = message.content;
+        hasPrefix = false;
+      }
+    }
+  }
+
+  if (hasPrefix && !message.content.startsWith(prefix)) {
     // AutoReact
     try {
       const autoReacts = await prisma.autoReact.findMany({ where: { guildId } });
@@ -229,12 +251,13 @@ export async function handleMessageCreate(message: Message) {
     return;
   }
 
-  const args = message.content.slice(prefix.length).trim().split(/ +/);
+  if (!commandString) return;
+  const args = commandString.trim().split(/ +/);
   const commandName = args.shift()?.toLowerCase();
   if (!commandName) return;
 
   const ctx = new CommandContext(message, args);
-  ctx.prefix = prefix;
+  ctx.prefix = hasPrefix ? prefix : "";
   ctx.commandName = commandName;
 
   await handleCommand(ctx, commandName);

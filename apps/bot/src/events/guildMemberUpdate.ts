@@ -1,7 +1,7 @@
 import { GuildMember } from "discord.js";
 import { prisma } from "../services/db.js";
-import { parseVariables, parseObjectVariables } from "../services/utils/parser.js";
-import { parseEmbedPlaceholder } from "../services/utils/placeholder.js";
+import { parseVariables } from "../services/utils/parser.js";
+import { parseFunctions, executeSend } from "../services/utils/placeholder.js";
 
 export async function handleGuildMemberUpdate(oldMember: GuildMember, newMember: GuildMember): Promise<void> {
   const guild = newMember.guild;
@@ -20,25 +20,10 @@ export async function handleGuildMemberUpdate(oldMember: GuildMember, newMember:
         const ch = guild.channels.cache.get(config.boostChannelId);
         if (ch && "send" in ch) {
           const template = config.boostMessage || "Thanks {user} for boosting {server}!";
-          const parsedMessage = parseVariables(template, { user: newMember, guild });
-
-          let sendPayload: any = {};
-
-          if (parsedMessage.includes("{embed:") || parsedMessage.includes("{EMBED:")) {
-            const res = await parseEmbedPlaceholder(parsedMessage, guild.id);
-            let embeds = res.embeds || [];
-            if (embeds.length > 0) {
-              embeds = embeds.map(emb => parseObjectVariables(emb, { user: newMember, guild }));
-            }
-            sendPayload = {
-              content: res.content || undefined,
-              embeds
-            };
-          } else {
-            sendPayload = { content: parsedMessage };
-          }
-
-          await (ch as any).send(sendPayload);
+          const parserCtx = { user: newMember, guild };
+          const parsedMessage = parseVariables(template, parserCtx);
+          const finalPayload = await parseFunctions(parsedMessage, guild.id, parserCtx);
+          await executeSend(ch, finalPayload, newMember, guild);
         }
       }
     } catch (err) {

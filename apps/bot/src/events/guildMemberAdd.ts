@@ -1,9 +1,11 @@
 import { GuildMember, TextChannel, EmbedBuilder } from "discord.js";
 import { prisma } from "../services/db.js";
-import { parseVariables, parseObjectVariables } from "../services/utils/parser.js";
-import { parseEmbedPlaceholder } from "../services/utils/placeholder.js";
+import { parseVariables } from "../services/utils/parser.js";
+import { parseFunctions, executeSend } from "../services/utils/placeholder.js";
+import { trackMemberJoin } from "../services/invites.js";
 
 export async function handleGuildMemberAdd(member: GuildMember) {
+  await trackMemberJoin(member).catch(() => null);
   const guild = member.guild;
 
   // 1. Fetch config
@@ -34,24 +36,17 @@ export async function handleGuildMemberAdd(member: GuildMember) {
       const ch = guild.channels.cache.get(config.welcomeChannelId) as TextChannel;
       if (ch) {
         const template = config.welcomeMessage || "Welcome {mention} to {server}!";
-        const parsedMessage = parseVariables(template, { user: member, guild });
+        const parserCtx = { user: member, guild };
+        const parsedMessage = parseVariables(template, parserCtx);
 
-        let sendPayload: any = {};
+        let finalPayload: any;
 
         if (parsedMessage.includes("{embed:") || parsedMessage.includes("{EMBED:")) {
-          const res = await parseEmbedPlaceholder(parsedMessage, guild.id);
-          let embeds = res.embeds || [];
-          if (embeds.length > 0) {
-            embeds = embeds.map(emb => parseObjectVariables(emb, { user: member, guild }));
-          }
-          sendPayload = {
-            content: res.content || undefined,
-            embeds
-          };
+          finalPayload = await parseFunctions(parsedMessage, guild.id, parserCtx);
         } else {
           const welcomeType = config.welcomeType || "both";
           if (welcomeType === "normal") {
-            sendPayload = { content: parsedMessage };
+            finalPayload = { content: parsedMessage };
           } else {
             const embed = new EmbedBuilder()
               .setTitle(`Welcome to ${guild.name}!`)
@@ -61,10 +56,10 @@ export async function handleGuildMemberAdd(member: GuildMember) {
               .setTimestamp();
 
             if (welcomeType === "embed") {
-              sendPayload = { embeds: [embed] };
+              finalPayload = { embeds: [embed] };
             } else {
               // both
-              sendPayload = {
+              finalPayload = {
                 content: `Welcome ${member}!`,
                 embeds: [embed]
               };
@@ -72,15 +67,17 @@ export async function handleGuildMemberAdd(member: GuildMember) {
           }
         }
 
-        const sentMsg = await ch.send(sendPayload);
+        const sentMsg = await executeSend(ch, finalPayload, member, guild);
 
-        // Handle welcome autodelete
-        if (config.welcomeAutoDelete && config.welcomeAutoDelete > 0) {
-          setTimeout(async () => {
-            try {
-              await sentMsg.delete();
-            } catch {}
-          }, config.welcomeAutoDelete * 1000);
+        // Handle welcome autodelete if not overridden by dynamic delete_reply
+        if (sentMsg && (!finalPayload.deleteReplyAfter || finalPayload.deleteReplyAfter <= 0)) {
+          if (config.welcomeAutoDelete && config.welcomeAutoDelete > 0) {
+            setTimeout(async () => {
+              try {
+                await sentMsg.delete();
+              } catch {}
+            }, config.welcomeAutoDelete * 1000);
+          }
         }
       }
     } catch (err) {
@@ -88,12 +85,4 @@ export async function handleGuildMemberAdd(member: GuildMember) {
     }
   }
 
-  // 4. Send Welcome DM if enabled
-  if (config.welcomeDmEnabled) {
-    try {
-      const dmTemplate = "Welcome to {server}! We are happy to have you here.";
-      const parsedDm = parseVariables(dmTemplate, { user: member, guild });
-      await member.send({ content: parsedDm });
-    } catch {}
-  }
 }
