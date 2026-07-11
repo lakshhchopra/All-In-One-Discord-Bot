@@ -20,7 +20,7 @@ model GuildConfig {
   welcomeMessage    String?  // Template string
   welcomeAutoDelete Int?     // Auto-delete duration in seconds
   welcomeDmEnabled  Boolean  @default(false)
-  welcomeImageBg    String?  // Canvas background image URL
+  welcomeType       String   @default("both") // normal, embed, both
   
   // Leave Settings
   leaveChannelId    String?

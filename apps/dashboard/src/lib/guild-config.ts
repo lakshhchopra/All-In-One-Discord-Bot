@@ -4,6 +4,7 @@ export type GuildConfig = {
   guildId: string;
   welcomeChannelId: string | null;
   welcomeMessage: string | null;
+  welcomeType: string;
   logChannelId: string | null;
   ticketCategoryId: string | null;
   supportRoleId: string | null;
@@ -19,21 +20,13 @@ export type GuildConfig = {
 };
 
 type GuildConfigRow = {
-  guild_id: string;
-  welcome_channel_id: string | null;
-  welcome_message: string | null;
-  log_channel_id: string | null;
-  ticket_category_id: string | null;
-  support_role_id: string | null;
-  verified_role_id: string | null;
-  auto_role_id: string | null;
-  temp_voice_join_channel_id: string | null;
-  temp_voice_category_id: string | null;
-  birthday_channel_id: string | null;
-  leveling_enabled: boolean;
-  level_up_channel_id: string | null;
-  accent_color: number | null;
-  updated_at: string | null;
+  guildId: string;
+  welcomeChannelId: string | null;
+  welcomeMessage: string | null;
+  welcomeType: string | null;
+  logChannelId: string | null;
+  accentColor: number | null;
+  updatedAt: string | null;
 };
 
 export type GuildConfigPatch = Partial<Omit<GuildConfig, "guildId" | "updatedAt">>;
@@ -45,6 +38,7 @@ function fallback(guildId: string): GuildConfig {
     guildId,
     welcomeChannelId: null,
     welcomeMessage: defaultWelcome,
+    welcomeType: "both",
     logChannelId: null,
     ticketCategoryId: null,
     supportRoleId: null,
@@ -65,21 +59,22 @@ function toConfig(row: GuildConfigRow | undefined, guildId: string): GuildConfig
   if (!row) return base;
 
   return {
-    guildId: row.guild_id,
-    welcomeChannelId: row.welcome_channel_id,
-    welcomeMessage: row.welcome_message ?? base.welcomeMessage,
-    logChannelId: row.log_channel_id,
-    ticketCategoryId: row.ticket_category_id,
-    supportRoleId: row.support_role_id,
-    verifiedRoleId: row.verified_role_id,
-    autoRoleId: row.auto_role_id,
-    tempVoiceJoinChannelId: row.temp_voice_join_channel_id,
-    tempVoiceCategoryId: row.temp_voice_category_id,
-    birthdayChannelId: row.birthday_channel_id,
-    levelingEnabled: row.leveling_enabled,
-    levelUpChannelId: row.level_up_channel_id,
-    accentColor: row.accent_color ?? base.accentColor,
-    updatedAt: row.updated_at
+    guildId: row.guildId,
+    welcomeChannelId: row.welcomeChannelId,
+    welcomeMessage: row.welcomeMessage ?? base.welcomeMessage,
+    welcomeType: row.welcomeType ?? base.welcomeType,
+    logChannelId: row.logChannelId,
+    ticketCategoryId: null,
+    supportRoleId: null,
+    verifiedRoleId: null,
+    autoRoleId: null,
+    tempVoiceJoinChannelId: null,
+    tempVoiceCategoryId: null,
+    birthdayChannelId: null,
+    levelingEnabled: false,
+    levelUpChannelId: null,
+    accentColor: row.accentColor ?? base.accentColor,
+    updatedAt: row.updatedAt
   };
 }
 
@@ -99,7 +94,7 @@ function cleanColor(value: unknown) {
 }
 
 export async function getGuildConfig(guildId: string) {
-  const result = await query<GuildConfigRow>("select * from public.guild_configs where guild_id = $1", [guildId]);
+  const result = await query<GuildConfigRow>('select * from public."GuildConfig" where "guildId" = $1', [guildId]);
   return toConfig(result.rows[0], guildId);
 }
 
@@ -111,59 +106,31 @@ export async function updateGuildConfig(guildId: string, patch: GuildConfigPatch
     guildId,
     welcomeChannelId: cleanString(patch.welcomeChannelId ?? current.welcomeChannelId),
     welcomeMessage: cleanString(patch.welcomeMessage ?? current.welcomeMessage) ?? defaultWelcome,
+    welcomeType: cleanString(patch.welcomeType ?? current.welcomeType) ?? "both",
     logChannelId: cleanString(patch.logChannelId ?? current.logChannelId),
-    ticketCategoryId: cleanString(patch.ticketCategoryId ?? current.ticketCategoryId),
-    supportRoleId: cleanString(patch.supportRoleId ?? current.supportRoleId),
-    verifiedRoleId: cleanString(patch.verifiedRoleId ?? current.verifiedRoleId),
-    autoRoleId: cleanString(patch.autoRoleId ?? current.autoRoleId),
-    tempVoiceJoinChannelId: cleanString(patch.tempVoiceJoinChannelId ?? current.tempVoiceJoinChannelId),
-    tempVoiceCategoryId: cleanString(patch.tempVoiceCategoryId ?? current.tempVoiceCategoryId),
-    birthdayChannelId: cleanString(patch.birthdayChannelId ?? current.birthdayChannelId),
-    levelUpChannelId: cleanString(patch.levelUpChannelId ?? current.levelUpChannelId),
-    levelingEnabled: cleanBoolean(patch.levelingEnabled ?? current.levelingEnabled),
     accentColor: cleanColor(patch.accentColor ?? current.accentColor),
     updatedAt: current.updatedAt
   };
 
   const result = await query<GuildConfigRow>(
-    `insert into public.guild_configs (
-      guild_id, welcome_channel_id, welcome_message, log_channel_id, ticket_category_id, support_role_id,
-      verified_role_id, auto_role_id, temp_voice_join_channel_id, temp_voice_category_id, birthday_channel_id,
-      leveling_enabled, level_up_channel_id, accent_color
+    `insert into public."GuildConfig" (
+      "guildId", "welcomeChannelId", "welcomeMessage", "welcomeType", "logChannelId", "accentColor"
     ) values (
-      $1, $2, $3, $4, $5, $6,
-      $7, $8, $9, $10, $11,
-      $12, $13, $14
+      $1, $2, $3, $4, $5, $6
     )
-    on conflict (guild_id) do update set
-      welcome_channel_id = excluded.welcome_channel_id,
-      welcome_message = excluded.welcome_message,
-      log_channel_id = excluded.log_channel_id,
-      ticket_category_id = excluded.ticket_category_id,
-      support_role_id = excluded.support_role_id,
-      verified_role_id = excluded.verified_role_id,
-      auto_role_id = excluded.auto_role_id,
-      temp_voice_join_channel_id = excluded.temp_voice_join_channel_id,
-      temp_voice_category_id = excluded.temp_voice_category_id,
-      birthday_channel_id = excluded.birthday_channel_id,
-      leveling_enabled = excluded.leveling_enabled,
-      level_up_channel_id = excluded.level_up_channel_id,
-      accent_color = excluded.accent_color
+    on conflict ("guildId") do update set
+      "welcomeChannelId" = excluded."welcomeChannelId",
+      "welcomeMessage" = excluded."welcomeMessage",
+      "welcomeType" = excluded."welcomeType",
+      "logChannelId" = excluded."logChannelId",
+      "accentColor" = excluded."accentColor"
     returning *`,
     [
       guildId,
       next.welcomeChannelId,
       next.welcomeMessage,
+      next.welcomeType,
       next.logChannelId,
-      next.ticketCategoryId,
-      next.supportRoleId,
-      next.verifiedRoleId,
-      next.autoRoleId,
-      next.tempVoiceJoinChannelId,
-      next.tempVoiceCategoryId,
-      next.birthdayChannelId,
-      next.levelingEnabled,
-      next.levelUpChannelId,
       next.accentColor
     ]
   );

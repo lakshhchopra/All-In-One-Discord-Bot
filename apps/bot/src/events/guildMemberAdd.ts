@@ -1,15 +1,15 @@
-import { GuildMember, TextChannel, AttachmentBuilder } from "discord.js";
+import { GuildMember, TextChannel, EmbedBuilder } from "discord.js";
 import { prisma } from "../services/db.js";
-import { drawWelcomeCard } from "../services/canvas.js";
-import { parseVariables } from "../services/utils/parser.js";
+import { parseVariables, parseObjectVariables } from "../services/utils/parser.js";
+import { parseEmbedPlaceholder } from "../services/utils/placeholder.js";
 
 export async function handleGuildMemberAdd(member: GuildMember) {
   const guild = member.guild;
 
   // 1. Fetch config
-  const config = await prisma.guildConfig.findUnique({
+  const config = (await prisma.guildConfig.findUnique({
     where: { guildId: guild.id }
-  });
+  })) as any;
 
   if (!config) return;
 
@@ -28,28 +28,51 @@ export async function handleGuildMemberAdd(member: GuildMember) {
     }
   }
 
-  // 3. Welcome Greet card
+  // 3. Welcome Greet
   if (config.welcomeChannelId) {
     try {
       const ch = guild.channels.cache.get(config.welcomeChannelId) as TextChannel;
       if (ch) {
-        const avatarUrl = member.user.displayAvatarURL({ extension: "png" });
-        const canvasBuffer = await drawWelcomeCard(
-          avatarUrl,
-          member.user.username,
-          guild.name,
-          String(guild.memberCount),
-          config.welcomeImageBg || undefined
-        );
-
-        const attachment = new AttachmentBuilder(canvasBuffer, { name: "welcome.png" });
         const template = config.welcomeMessage || "Welcome {mention} to {server}!";
         const parsedMessage = parseVariables(template, { user: member, guild });
 
-        const sentMsg = await ch.send({
-          content: parsedMessage,
-          files: [attachment]
-        });
+        let sendPayload: any = {};
+
+        if (parsedMessage.includes("{embed:") || parsedMessage.includes("{EMBED:")) {
+          const res = await parseEmbedPlaceholder(parsedMessage, guild.id);
+          let embeds = res.embeds || [];
+          if (embeds.length > 0) {
+            embeds = embeds.map(emb => parseObjectVariables(emb, { user: member, guild }));
+          }
+          sendPayload = {
+            content: res.content || undefined,
+            embeds
+          };
+        } else {
+          const welcomeType = config.welcomeType || "both";
+          if (welcomeType === "normal") {
+            sendPayload = { content: parsedMessage };
+          } else {
+            const embed = new EmbedBuilder()
+              .setTitle(`Welcome to ${guild.name}!`)
+              .setDescription(parsedMessage)
+              .setThumbnail(member.user.displayAvatarURL({ extension: "png" }))
+              .setColor(0x3498db)
+              .setTimestamp();
+
+            if (welcomeType === "embed") {
+              sendPayload = { embeds: [embed] };
+            } else {
+              // both
+              sendPayload = {
+                content: `Welcome ${member}!`,
+                embeds: [embed]
+              };
+            }
+          }
+        }
+
+        const sentMsg = await ch.send(sendPayload);
 
         // Handle welcome autodelete
         if (config.welcomeAutoDelete && config.welcomeAutoDelete > 0) {

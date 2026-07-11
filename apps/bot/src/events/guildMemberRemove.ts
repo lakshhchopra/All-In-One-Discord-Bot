@@ -2,6 +2,8 @@ import { AuditLogEvent, EmbedBuilder, GuildMember, PartialGuildMember } from "di
 import { isWhitelisted } from "../utils/security.js";
 import { prisma } from "../services/db.js";
 import { sendSupportLog } from "../utils/supportLogger.js";
+import { parseVariables, parseObjectVariables } from "../services/utils/parser.js";
+import { parseEmbedPlaceholder } from "../services/utils/placeholder.js";
 
 export async function handleGuildMemberRemove(member: GuildMember | PartialGuildMember): Promise<void> {
   const guild = member.guild;
@@ -19,10 +21,25 @@ export async function handleGuildMemberRemove(member: GuildMember | PartialGuild
           const ch = guild.channels.cache.get(cfg.leaveChannelId);
           if (ch && "send" in ch) {
             const template = cfg.leaveMessage || "Goodbye {user}!";
-            const parsed = template
-              .replace("{user}", member.user?.tag || member.id)
-              .replace("{server}", guild.name);
-            await (ch as any).send({ content: parsed });
+            const parsedMessage = parseVariables(template, { user: member as any, guild });
+
+            let sendPayload: any = {};
+
+            if (parsedMessage.includes("{embed:") || parsedMessage.includes("{EMBED:")) {
+              const res = await parseEmbedPlaceholder(parsedMessage, guild.id);
+              let embeds = res.embeds || [];
+              if (embeds.length > 0) {
+                embeds = embeds.map(emb => parseObjectVariables(emb, { user: member as any, guild }));
+              }
+              sendPayload = {
+                content: res.content || undefined,
+                embeds
+              };
+            } else {
+              sendPayload = { content: parsedMessage };
+            }
+
+            await (ch as any).send(sendPayload);
           }
         } catch (leaveErr) {
           console.error("Failed to send leave message:", leaveErr);

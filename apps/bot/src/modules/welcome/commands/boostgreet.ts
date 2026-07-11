@@ -1,6 +1,8 @@
 import { Command } from "../../../commands/command.js";
 import { prisma } from "../../../services/db.js";
 import { UniversalEmbed } from "../../../services/embed.js";
+import { parseVariables, parseObjectVariables } from "../../../services/utils/parser.js";
+import { parseEmbedPlaceholder } from "../../../services/utils/placeholder.js";
 import { ChannelType } from "discord.js";
 
 export const boostgreetCommand: Command = {
@@ -103,11 +105,27 @@ export const boostgreetCommand: Command = {
       }
 
       const text = config.boostMessage || "Thanks {user} for boosting {server}!";
-      const parsedText = text.replace("{user}", ctx.user.tag).replace("{server}", ctx.guild.name);
+      const parsedMessage = parseVariables(text, { user: ctx.member || ctx.user, guild: ctx.guild });
 
       const channel = ctx.guild.channels.cache.get(channelId);
       if (channel && "send" in channel) {
-        await (channel as any).send({ content: parsedText });
+        let sendPayload: any = {};
+
+        if (parsedMessage.includes("{embed:") || parsedMessage.includes("{EMBED:")) {
+          const res = await parseEmbedPlaceholder(parsedMessage, ctx.guild.id);
+          let embeds = res.embeds || [];
+          if (embeds.length > 0) {
+            embeds = embeds.map(emb => parseObjectVariables(emb, { user: ctx.member || ctx.user, guild: ctx.guild }));
+          }
+          sendPayload = {
+            content: res.content || undefined,
+            embeds
+          };
+        } else {
+          sendPayload = { content: parsedMessage };
+        }
+
+        await (channel as any).send(sendPayload);
         return ctx.reply({ embeds: [UniversalEmbed.success("Sent test boost greeting message.", ctx.guild)] });
       }
 

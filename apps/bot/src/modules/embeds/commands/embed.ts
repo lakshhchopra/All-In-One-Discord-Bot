@@ -3,17 +3,20 @@ import {
   ButtonBuilder, 
   ButtonStyle, 
   ComponentType, 
-  StringSelectMenuBuilder, 
   TextChannel, 
   WebhookClient, 
   AttachmentBuilder,
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle,
   Guild
 } from "discord.js";
 import { Command } from "../../../commands/command.js";
 import { UniversalEmbed } from "../../../services/embed.js";
 import { prisma } from "../../../services/db.js";
 import { redis } from "../../../services/redis.js";
-import { EMOJIS, getEmojiUrl } from "../../../config/emojis.js";
+import { EMOJIS } from "../../../config/emojis.js";
+import { parseVariables, parseObjectVariables } from "../../../services/utils/parser.js";
 
 // Helper to validate alphanumeric name
 function isValidName(name: string): boolean {
@@ -24,24 +27,40 @@ export const embedCommand: Command = {
   name: "embed",
   description: "Manage and create custom embeds dynamically.",
   category: "Media",
-  usage: "embed <create | edit | save | rename | send | export | import | show | delete> <name> [options]",
+  usage: "embed <create | edit | save | rename | send | post | export | import | list | show | delete> <name> [options]",
   examples: [
     "embed create rules",
     "embed send rules #general",
-    "embed save welcome",
+    "embed list",
+    "embed show rules",
     "embed delete rules"
   ],
   execute: async (ctx) => {
     const subcommand = ctx.getStringOption("subcommand", 0)?.toLowerCase();
+    const validSubcommands = ["create", "edit", "save", "rename", "send", "post", "export", "import", "list", "show", "delete"];
 
-    if (!subcommand) {
-      return ctx.wrongUsage(embedCommand);
+    if (!subcommand || !validSubcommands.includes(subcommand)) {
+      const helpEmbed = new UniversalEmbed("info", undefined, ctx.guild)
+        .setTitle(`${EMOJIS.media} Custom Embed System Help`)
+        .setDescription(
+          `Below is the list of all available subcommands in the custom embed system:\n\n` +
+          `• \`embed list\` - List names of all saved custom embeds.\n` +
+          `• \`embed show <name>\` - Display a preview of the saved embed with dynamic variables.\n` +
+          `• \`embed create <name>\` - Start interactive modal-based editor to build a new embed.\n` +
+          `• \`embed edit <name>\` - Modify an existing custom embed using modal forms.\n` +
+          `• \`embed post/send <name> [channel]\` - Send the custom embed to a specific channel.\n` +
+          `• \`embed save <name> [message_id]\` - Save an embed directly from an existing channel message.\n` +
+          `• \`embed delete <name>\` - Delete a saved custom embed.\n` +
+          `• \`embed rename <name> <new_name>\` - Rename a saved custom embed.\n` +
+          `• \`embed export <name> <file/token>\` - Export embed configuration to a file or shareable token.\n` +
+          `• \`embed import <name> [token]\` - Import embed configuration from a file attachment or token.`
+        )
+        .setFooter({ text: "Use these placeholders inside embeds: {user}, {server_name}, {server_icon}, etc." });
+      return ctx.reply({ embeds: [helpEmbed] });
     }
 
-    const name = ctx.getStringOption("name", 1)?.toLowerCase();
-
-    // 1. Show all saved embeds
-    if (subcommand === "show") {
+    // 1. List saved embeds (doesn't require a name)
+    if (subcommand === "list") {
       const embedsList = await prisma.savedEmbed.findMany({
         where: { guildId: ctx.guild.id }
       });
@@ -59,6 +78,8 @@ export const embedCommand: Command = {
       return ctx.reply({ embeds: [listEmbed] });
     }
 
+    const name = ctx.getStringOption("name", 1)?.toLowerCase();
+
     if (!name) {
       return ctx.reply({ embeds: [UniversalEmbed.error("Please specify a name for the embed.", ctx.guild)] }, 5);
     }
@@ -67,7 +88,26 @@ export const embedCommand: Command = {
       return ctx.reply({ embeds: [UniversalEmbed.error("Embed name must be a single alphanumeric word (hyphens/underscores allowed).", ctx.guild)] }, 5);
     }
 
-    // 2. Delete Embed
+    // 2. Show specific embed
+    if (subcommand === "show") {
+      const saved = await prisma.savedEmbed.findUnique({
+        where: { guildId_name: { guildId: ctx.guild.id, name } }
+      });
+
+      if (!saved) {
+        return ctx.reply({ embeds: [UniversalEmbed.error(`Saved embed \`${name}\` not found.`, ctx.guild)] }, 5);
+      }
+
+      const rawEmbedData = saved.embedData as any;
+      const rawContent = saved.content || "";
+
+      const parsedContent = parseVariables(rawContent, { user: ctx.member || ctx.user, guild: ctx.guild });
+      const parsedEmbedData = parseObjectVariables(rawEmbedData, { user: ctx.member || ctx.user, guild: ctx.guild });
+
+      return ctx.reply({ content: parsedContent || undefined, embeds: [parsedEmbedData] });
+    }
+
+    // 3. Delete Embed
     if (subcommand === "delete") {
       try {
         await prisma.savedEmbed.delete({
@@ -79,7 +119,7 @@ export const embedCommand: Command = {
       }
     }
 
-    // 3. Rename Embed
+    // 4. Rename Embed
     if (subcommand === "rename") {
       const newName = ctx.getStringOption("new_name", 2)?.toLowerCase();
       if (!newName || !isValidName(newName)) {
@@ -110,7 +150,7 @@ export const embedCommand: Command = {
       return ctx.reply({ embeds: [UniversalEmbed.success(`Successfully renamed embed \`${name}\` to \`${newName}\`.`, ctx.guild)] });
     }
 
-    // 4. Save Embed from existing message
+    // 5. Save Embed from existing message
     if (subcommand === "save") {
       let targetMessageId = ctx.getStringOption("message_id", 2);
 
@@ -157,8 +197,8 @@ export const embedCommand: Command = {
       return ctx.reply({ embeds: [UniversalEmbed.success(`Successfully saved embed from message as \`${name}\`.`, ctx.guild)] });
     }
 
-    // 5. Send Embed
-    if (subcommand === "send") {
+    // 6. Send / Post Embed
+    if (subcommand === "send" || subcommand === "post") {
       const saved = await prisma.savedEmbed.findUnique({
         where: { guildId_name: { guildId: ctx.guild.id, name } }
       });
@@ -167,8 +207,11 @@ export const embedCommand: Command = {
         return ctx.reply({ embeds: [UniversalEmbed.error(`Saved embed \`${name}\` not found.`, ctx.guild)] }, 5);
       }
 
-      const embedData = saved.embedData as any;
-      const content = saved.content || undefined;
+      const rawEmbedData = saved.embedData as any;
+      const rawContent = saved.content || "";
+
+      const parsedContent = parseVariables(rawContent, { user: ctx.member || ctx.user, guild: ctx.guild });
+      const parsedEmbedData = parseObjectVariables(rawEmbedData, { user: ctx.member || ctx.user, guild: ctx.guild });
 
       const targetChannelOption = ctx.getChannelOption("channel", 2);
       const targetChannel = (targetChannelOption as TextChannel) || (ctx.isInteraction ? ctx.source.channel : (ctx.source as any).channel);
@@ -181,8 +224,8 @@ export const embedCommand: Command = {
         try {
           const webhook = new WebhookClient({ url: webhookUrl });
           await webhook.send({
-            content,
-            embeds: [embedData],
+            content: parsedContent || undefined,
+            embeds: [parsedEmbedData],
             username: webhookName || undefined,
             avatarURL: webhookAvatar || undefined
           });
@@ -193,14 +236,14 @@ export const embedCommand: Command = {
       }
 
       if (targetChannel && "send" in targetChannel) {
-        await targetChannel.send({ content, embeds: [embedData] });
+        await targetChannel.send({ content: parsedContent || undefined, embeds: [parsedEmbedData] });
         return ctx.reply({ embeds: [UniversalEmbed.success(`Successfully sent embed \`${name}\` in ${targetChannel}.`, ctx.guild)] });
       }
 
       return ctx.reply({ embeds: [UniversalEmbed.error("Invalid target channel.", ctx.guild)] }, 5);
     }
 
-    // 6. Export Embed
+    // 7. Export Embed
     if (subcommand === "export") {
       const exportType = ctx.getStringOption("type", 2)?.toLowerCase();
       if (exportType !== "file" && exportType !== "token") {
@@ -239,7 +282,7 @@ export const embedCommand: Command = {
       });
     }
 
-    // 7. Import Embed
+    // 8. Import Embed
     if (subcommand === "import") {
       const token = ctx.getStringOption("token", 2);
       let payload: any = null;
@@ -286,7 +329,7 @@ export const embedCommand: Command = {
       return ctx.reply({ embeds: [UniversalEmbed.success(`Successfully imported embed config as \`${name}\`!`, ctx.guild)] });
     }
 
-    // 8. Create or Edit (Interactive Builder)
+    // 9. Create or Edit (Interactive Modal-based Builder)
     if (subcommand === "create" || subcommand === "edit") {
       let draftEmbed: any = {
         title: "Draft Title",
@@ -315,31 +358,19 @@ export const embedCommand: Command = {
       }
 
       const getBuilderComponents = () => {
-        const menu = new StringSelectMenuBuilder()
-          .setCustomId("builder_menu")
-          .setPlaceholder("Select a component to edit...")
-          .addOptions([
-            { label: "Edit Title", value: "title", description: "Set the embed header title" },
-            { label: "Edit Description", value: "description", description: "Set the embed main description text" },
-            { label: "Edit Color", value: "color", description: "Set the accent line color (Hex code)" },
-            { label: "Edit Content", value: "content", description: "Set standard plain text above the embed" },
-            { label: "Edit Image", value: "image", description: "Set main cover image URL" },
-            { label: "Edit Thumbnail", value: "thumbnail", description: "Set corner thumbnail image URL" },
-            { label: "Edit Author Info", value: "author", description: "Format: Name | Icon URL" },
-            { label: "Edit Footer Info", value: "footer", description: "Format: Text | Icon URL" },
-            { label: "Add Field", value: "addfield", description: "Format: Name | Value | Inline(true/false)" },
-            { label: "Delete Field", value: "delfield", description: "Delete a field by index number" }
-          ]);
-
-        const buttons = new ActionRowBuilder<ButtonBuilder>().addComponents(
-          new ButtonBuilder().setCustomId("builder_save").setLabel("Save").setStyle(ButtonStyle.Success),
-          new ButtonBuilder().setCustomId("builder_cancel").setLabel("Cancel").setStyle(ButtonStyle.Danger)
+        const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+          new ButtonBuilder().setCustomId("embed_edit_main").setLabel("edit color / title / description").setStyle(ButtonStyle.Primary),
+          new ButtonBuilder().setCustomId("embed_edit_author").setLabel("edit author").setStyle(ButtonStyle.Secondary),
+          new ButtonBuilder().setCustomId("embed_edit_footer").setLabel("edit footer").setStyle(ButtonStyle.Secondary),
+          new ButtonBuilder().setCustomId("embed_edit_images").setLabel("edit images").setStyle(ButtonStyle.Secondary)
         );
 
-        return [
-          new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(menu),
-          buttons
-        ];
+        const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+          new ButtonBuilder().setCustomId("embed_save").setLabel("Save").setStyle(ButtonStyle.Success),
+          new ButtonBuilder().setCustomId("embed_cancel").setLabel("Cancel").setStyle(ButtonStyle.Danger)
+        );
+
+        return [row1, row2];
       };
 
       const response = await ctx.reply({
@@ -351,7 +382,7 @@ export const embedCommand: Command = {
       if (!response) return;
 
       const collector = response.createMessageComponentCollector({
-        time: 300000 // 5 minutes timeout
+        time: 600000 // 10 minutes timeout
       });
 
       collector.on("collect", async (interaction) => {
@@ -359,125 +390,287 @@ export const embedCommand: Command = {
           return interaction.reply({ content: "❌ You cannot control this session.", ephemeral: true });
         }
 
-        // Handle Save/Cancel Buttons
-        if (interaction.isButton()) {
-          if (interaction.customId === "builder_save") {
-            await prisma.savedEmbed.upsert({
-              where: { guildId_name: { guildId: ctx.guild.id, name } },
-              create: {
-                guildId: ctx.guild.id,
-                name,
-                content: draftContent,
-                embedData: draftEmbed
-              },
-              update: {
-                content: draftContent,
-                embedData: draftEmbed
-              }
-            });
-            collector.stop("saved");
-            await interaction.update({
-              content: `✅ **Successfully saved embed \`${name}\`!**`,
-              embeds: [],
-              components: []
-            });
-          } else if (interaction.customId === "builder_cancel") {
-            collector.stop("cancelled");
-            await interaction.update({
-              content: `❌ **Discarded embed draft changes.**`,
-              embeds: [],
-              components: []
-            });
-          }
+        const id = interaction.customId;
+
+        // Handle Save/Cancel
+        if (id === "embed_save") {
+          await prisma.savedEmbed.upsert({
+            where: { guildId_name: { guildId: ctx.guild.id, name } },
+            create: {
+              guildId: ctx.guild.id,
+              name,
+              content: draftContent,
+              embedData: draftEmbed
+            },
+            update: {
+              content: draftContent,
+              embedData: draftEmbed
+            }
+          });
+          collector.stop("saved");
+          await interaction.update({
+            content: `✅ **Successfully saved embed \`${name}\`!**`,
+            embeds: [],
+            components: []
+          });
           return;
         }
 
-        // Handle Dropdown Menu Selections
-        if (interaction.isStringSelectMenu() && interaction.customId === "builder_menu") {
-          const selected = interaction.values[0];
-
-          await interaction.reply({
-            content: `💬 **Please type the new value for \`${selected}\` in the chat:**\n*(or type \`cancel\` to abort)*`,
-            ephemeral: true
+        if (id === "embed_cancel") {
+          collector.stop("cancelled");
+          await interaction.update({
+            content: `❌ **Discarded embed draft changes.**`,
+            embeds: [],
+            components: []
           });
+          return;
+        }
 
-          const msgCollector = (interaction.channel as any)?.createMessageCollector({
-            filter: (m: any) => m.author.id === ctx.user.id,
-            max: 1,
-            time: 60000
-          });
+        // Handle Modal-Based Edit button interactions
+        if (id === "embed_edit_main") {
+          const modal = new ModalBuilder()
+            .setCustomId("modal_main")
+            .setTitle(`Editing: ${name}`);
 
-          msgCollector?.on("collect", async (m: any) => {
-            const val = m.content.trim();
-            
-            // Delete user message to keep chat tidy
-            try {
-              await m.delete();
-            } catch {}
+          const titleInput = new TextInputBuilder()
+            .setCustomId("modal_title")
+            .setLabel("Title")
+            .setStyle(TextInputStyle.Short)
+            .setValue(draftEmbed.title || "")
+            .setRequired(false);
 
-            if (val.toLowerCase() === "cancel") {
-              await interaction.followUp({ content: "❌ Edit cancelled.", ephemeral: true });
-              return;
-            }
+          const descInput = new TextInputBuilder()
+            .setCustomId("modal_description")
+            .setLabel("Description")
+            .setStyle(TextInputStyle.Paragraph)
+            .setValue(draftEmbed.description || "")
+            .setRequired(false);
 
-            // Parse inputs based on field
-            if (selected === "title") {
-              draftEmbed.title = val;
-            } else if (selected === "description") {
-              draftEmbed.description = val;
-            } else if (selected === "color") {
-              const hexVal = val.replace("#", "");
+          const colorInput = new TextInputBuilder()
+            .setCustomId("modal_color")
+            .setLabel("Hex Color")
+            .setStyle(TextInputStyle.Short)
+            .setValue(draftEmbed.color ? draftEmbed.color.toString(16).padStart(6, "0") : "")
+            .setRequired(false);
+
+          modal.addComponents(
+            new ActionRowBuilder<TextInputBuilder>().addComponents(titleInput),
+            new ActionRowBuilder<TextInputBuilder>().addComponents(descInput),
+            new ActionRowBuilder<TextInputBuilder>().addComponents(colorInput)
+          );
+
+          await interaction.showModal(modal);
+
+          const submitted = await interaction.awaitModalSubmit({
+            filter: (i) => i.user.id === ctx.user.id,
+            time: 180000
+          }).catch(() => null);
+
+          if (submitted) {
+            draftEmbed.title = submitted.fields.getTextInputValue("modal_title") || undefined;
+            draftEmbed.description = submitted.fields.getTextInputValue("modal_description") || undefined;
+            const colorStr = submitted.fields.getTextInputValue("modal_color") || "";
+            if (colorStr) {
+              const hexVal = colorStr.replace("#", "");
               const parsedColor = parseInt(hexVal, 16);
-              if (isNaN(parsedColor)) {
-                await interaction.followUp({ content: "❌ Invalid Hex Color. Use format `#FF00FF`.", ephemeral: true });
-                return;
+              if (!isNaN(parsedColor)) {
+                draftEmbed.color = parsedColor;
               }
-              draftEmbed.color = parsedColor;
-            } else if (selected === "content") {
-              draftContent = val === "none" ? null : val;
-            } else if (selected === "image") {
-              draftEmbed.image = { url: val };
-            } else if (selected === "thumbnail") {
-              draftEmbed.thumbnail = { url: val };
-            } else if (selected === "author") {
-              const parts = val.split("|");
-              draftEmbed.author = {
-                name: parts[0]?.trim(),
-                icon_url: parts[1]?.trim() || undefined
-              };
-            } else if (selected === "footer") {
-              const parts = val.split("|");
-              draftEmbed.footer = {
-                text: parts[0]?.trim(),
-                icon_url: parts[1]?.trim() || undefined
-              };
-            } else if (selected === "addfield") {
-              const parts = val.split("|");
-              const isInline = parts[2]?.trim().toLowerCase() === "true";
-              if (!draftEmbed.fields) draftEmbed.fields = [];
-              draftEmbed.fields.push({
-                name: parts[0]?.trim() || "Field Name",
-                value: parts[1]?.trim() || "Field Value",
-                inline: isInline
-              });
-            } else if (selected === "delfield") {
-              const index = parseInt(val, 10);
-              if (isNaN(index) || !draftEmbed.fields || !draftEmbed.fields[index]) {
-                await interaction.followUp({ content: "❌ Invalid field index number.", ephemeral: true });
-                return;
-              }
-              draftEmbed.fields.splice(index, 1);
+            } else {
+              delete draftEmbed.color;
             }
 
-            // Update original preview message
             await response.edit({
               content: draftContent || undefined,
               embeds: [draftEmbed],
               components: getBuilderComponents() as any
             });
 
-            await interaction.followUp({ content: `✅ Updated \`${selected}\`!`, ephemeral: true });
-          });
+            await (submitted as any).deferUpdate();
+          }
+          return;
+        }
+
+        if (id === "embed_edit_author") {
+          const modal = new ModalBuilder()
+            .setCustomId("modal_author")
+            .setTitle(`Editing: ${name}`);
+
+          const nameInput = new TextInputBuilder()
+            .setCustomId("modal_author_name")
+            .setLabel("Author Text")
+            .setStyle(TextInputStyle.Short)
+            .setValue(draftEmbed.author?.name || "")
+            .setRequired(false);
+
+          const iconInput = new TextInputBuilder()
+            .setCustomId("modal_author_icon")
+            .setLabel("Author Image (optional)")
+            .setStyle(TextInputStyle.Short)
+            .setValue(draftEmbed.author?.icon_url || "")
+            .setRequired(false);
+
+          modal.addComponents(
+            new ActionRowBuilder<TextInputBuilder>().addComponents(nameInput),
+            new ActionRowBuilder<TextInputBuilder>().addComponents(iconInput)
+          );
+
+          await interaction.showModal(modal);
+
+          const submitted = await interaction.awaitModalSubmit({
+            filter: (i) => i.user.id === ctx.user.id,
+            time: 180000
+          }).catch(() => null);
+
+          if (submitted) {
+            const authorName = submitted.fields.getTextInputValue("modal_author_name") || "";
+            const authorIcon = submitted.fields.getTextInputValue("modal_author_icon") || "";
+            if (authorName) {
+              draftEmbed.author = {
+                name: authorName,
+                icon_url: authorIcon || undefined
+              };
+            } else {
+              delete draftEmbed.author;
+            }
+
+            await response.edit({
+              content: draftContent || undefined,
+              embeds: [draftEmbed],
+              components: getBuilderComponents() as any
+            });
+
+            await (submitted as any).deferUpdate();
+          }
+          return;
+        }
+
+        if (id === "embed_edit_footer") {
+          const modal = new ModalBuilder()
+            .setCustomId("modal_footer")
+            .setTitle(`Editing: ${name}`);
+
+          const textInput = new TextInputBuilder()
+            .setCustomId("modal_footer_text")
+            .setLabel("Footer Text")
+            .setStyle(TextInputStyle.Short)
+            .setValue(draftEmbed.footer?.text || "")
+            .setRequired(false);
+
+          const iconInput = new TextInputBuilder()
+            .setCustomId("modal_footer_icon")
+            .setLabel("Footer Image (optional)")
+            .setStyle(TextInputStyle.Short)
+            .setValue(draftEmbed.footer?.icon_url || "")
+            .setRequired(false);
+
+          const tsInput = new TextInputBuilder()
+            .setCustomId("modal_footer_timestamp")
+            .setLabel("Timestamp? (yes/no)")
+            .setStyle(TextInputStyle.Short)
+            .setValue(draftEmbed.timestamp ? "yes" : "no")
+            .setRequired(false);
+
+          modal.addComponents(
+            new ActionRowBuilder<TextInputBuilder>().addComponents(textInput),
+            new ActionRowBuilder<TextInputBuilder>().addComponents(iconInput),
+            new ActionRowBuilder<TextInputBuilder>().addComponents(tsInput)
+          );
+
+          await interaction.showModal(modal);
+
+          const submitted = await interaction.awaitModalSubmit({
+            filter: (i) => i.user.id === ctx.user.id,
+            time: 180000
+          }).catch(() => null);
+
+          if (submitted) {
+            const textVal = submitted.fields.getTextInputValue("modal_footer_text") || "";
+            const iconVal = submitted.fields.getTextInputValue("modal_footer_icon") || "";
+            const tsVal = submitted.fields.getTextInputValue("modal_footer_timestamp") || "";
+
+            if (textVal) {
+              draftEmbed.footer = {
+                text: textVal,
+                icon_url: iconVal || undefined
+              };
+            } else {
+              delete draftEmbed.footer;
+            }
+
+            if (tsVal.toLowerCase() === "yes") {
+              draftEmbed.timestamp = new Date().toISOString();
+            } else {
+              delete draftEmbed.timestamp;
+            }
+
+            await response.edit({
+              content: draftContent || undefined,
+              embeds: [draftEmbed],
+              components: getBuilderComponents() as any
+            });
+
+            await (submitted as any).deferUpdate();
+          }
+          return;
+        }
+
+        if (id === "embed_edit_images") {
+          const modal = new ModalBuilder()
+            .setCustomId("modal_images")
+            .setTitle(`Editing: ${name}`);
+
+          const mainImageInput = new TextInputBuilder()
+            .setCustomId("modal_image_url")
+            .setLabel("Main Image")
+            .setStyle(TextInputStyle.Short)
+            .setValue(draftEmbed.image?.url || "")
+            .setRequired(false);
+
+          const thumbnailInput = new TextInputBuilder()
+            .setCustomId("modal_thumbnail_url")
+            .setLabel("Thumbnail")
+            .setStyle(TextInputStyle.Short)
+            .setValue(draftEmbed.thumbnail?.url || "")
+            .setRequired(false);
+
+          modal.addComponents(
+            new ActionRowBuilder<TextInputBuilder>().addComponents(mainImageInput),
+            new ActionRowBuilder<TextInputBuilder>().addComponents(thumbnailInput)
+          );
+
+          await interaction.showModal(modal);
+
+          const submitted = await interaction.awaitModalSubmit({
+            filter: (i) => i.user.id === ctx.user.id,
+            time: 180000
+          }).catch(() => null);
+
+          if (submitted) {
+            const imgUrl = submitted.fields.getTextInputValue("modal_image_url") || "";
+            const thumbnailUrl = submitted.fields.getTextInputValue("modal_thumbnail_url") || "";
+
+            if (imgUrl) {
+              draftEmbed.image = { url: imgUrl };
+            } else {
+              delete draftEmbed.image;
+            }
+
+            if (thumbnailUrl) {
+              draftEmbed.thumbnail = { url: thumbnailUrl };
+            } else {
+              delete draftEmbed.thumbnail;
+            }
+
+            await response.edit({
+              content: draftContent || undefined,
+              embeds: [draftEmbed],
+              components: getBuilderComponents() as any
+            });
+
+            await (submitted as any).deferUpdate();
+          }
+          return;
         }
       });
 

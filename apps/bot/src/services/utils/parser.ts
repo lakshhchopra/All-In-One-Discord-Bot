@@ -130,3 +130,23 @@ export function parseVariables(template: string, ctx: ParserContext): string {
 
   return parsed;
 }
+
+/**
+ * Recursively parses placeholders in string values of any object structure.
+ */
+export function parseObjectVariables(obj: any, ctx: ParserContext): any {
+  if (typeof obj === "string") {
+    return parseVariables(obj, ctx);
+  }
+  if (Array.isArray(obj)) {
+    return obj.map(item => parseObjectVariables(item, ctx));
+  }
+  if (obj !== null && typeof obj === "object") {
+    const newObj: any = {};
+    for (const key in obj) {
+      newObj[key] = parseObjectVariables(obj[key], ctx);
+    }
+    return newObj;
+  }
+  return obj;
+}

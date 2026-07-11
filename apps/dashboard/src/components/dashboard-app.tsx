@@ -55,6 +55,7 @@ type GuildConfig = {
   guildId: string;
   welcomeChannelId: string | null;
   welcomeMessage: string | null;
+  welcomeType: string;
   logChannelId: string | null;
   ticketCategoryId: string | null;
   supportRoleId: string | null;
@@ -939,7 +940,7 @@ function ModuleView({
         </section>
 
         <section className="panel">
-          <label className="field">
+          <label className="field" style={{ marginBottom: "1rem" }}>
             <span className="field-label">Welcome message</span>
             <textarea
               className="textarea"
@@ -947,6 +948,17 @@ function ModuleView({
               onChange={(event) => updateConfig("welcomeMessage", event.target.value)}
             />
           </label>
+          <SelectField
+            label="Welcome type"
+            value={config.welcomeType}
+            options={[
+              { id: "normal", name: "Normal message (Text only)" },
+              { id: "embed", name: "Embed message (Embed only)" },
+              { id: "both", name: "Both message and embed" }
+            ]}
+            placeholder="Select type"
+            onChange={(value) => updateConfig("welcomeType", value || "both")}
+          />
         </section>
 
         <section className="panel">
@@ -1242,20 +1254,36 @@ function PreviewRail({
     .replaceAll("{server}", guildName)
     .replaceAll("{count}", "247");
 
+  const welcomeType = config.welcomeType || "both";
+
   return (
     <aside className="preview-stack">
-      <section className="preview-panel brand-preview-panel">
-        <img className="brand-preview-image" src="/brand/brownie-welcome.png" alt="" />
-      </section>
-
       <section className="preview-panel">
-        <h3>Embed preview</h3>
+        <h3>Live preview</h3>
         <div
-          className="discord-preview"
-          style={{ "--preview-accent": hexColor(config.accentColor) } as CSSProperties & Record<"--preview-accent", string>}
+          className="discord-preview-container"
+          style={{ display: "flex", flexDirection: "column", gap: "8px" }}
         >
-          <strong>Browniezzz</strong>
-          <p>{welcome || "Welcome @Raven to your server."}</p>
+          {/* Text message part (for normal or both) */}
+          {(welcomeType === "normal" || welcomeType === "both") && (
+            <div className="discord-chat-bubble" style={{ background: "#2f3136", padding: "10px 14px", borderRadius: "4px", fontSize: "0.9rem" }}>
+              <strong style={{ color: "#fff", display: "block", marginBottom: "4px", fontSize: "0.75rem" }}>Browniezzz <span style={{ background: "#5865F2", color: "#fff", fontSize: "0.6rem", padding: "1px 4px", borderRadius: "3px", textTransform: "uppercase", marginLeft: "4px" }}>BOT</span></strong>
+              <p style={{ margin: 0, color: "#dcddde", whiteSpace: "pre-wrap" }}>
+                {welcomeType === "both" ? `Welcome <@Raven>!` : (welcome || "Welcome @Raven to your server.")}
+              </p>
+            </div>
+          )}
+
+          {/* Embed part (for embed or both) */}
+          {(welcomeType === "embed" || welcomeType === "both") && (
+            <div
+              className="discord-preview"
+              style={{ "--preview-accent": hexColor(config.accentColor), marginTop: 0 } as CSSProperties & Record<"--preview-accent", string>}
+            >
+              <strong>Browniezzz</strong>
+              <p>{welcome || "Welcome @Raven to your server."}</p>
+            </div>
+          )}
         </div>
       </section>
 
