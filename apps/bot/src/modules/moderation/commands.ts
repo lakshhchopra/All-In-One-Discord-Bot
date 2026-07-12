@@ -34,12 +34,7 @@ import { clearcontainCommand } from "./commands/purge/clearcontain.js";
 import { clearembedCommand } from "./commands/purge/clearembed.js";
 
 // Role
-import { roleiconCommand } from "./commands/role/roleicon.js";
-import { rolealiasCommand } from "./commands/role/rolealias.js";
-import { roleallCommand } from "./commands/role/roleall.js";
-import { roleaddCommand } from "./commands/role/roleadd.js";
-import { roleremoveCommand } from "./commands/role/roleremove.js";
-import { rolecreateCommand } from "./commands/role/rolecreate.js";
+import { roleCommand } from "./commands/role.js";
 import { rroleCommand } from "./commands/role/rrole.js";
 
 // Quarantine
@@ -116,12 +111,7 @@ export function registerModeration() {
   CommandRegistry.register(clearembedCommand);
 
   // Role
-  CommandRegistry.register(roleiconCommand);
-  CommandRegistry.register(rolealiasCommand);
-  CommandRegistry.register(roleallCommand);
-  CommandRegistry.register(roleaddCommand);
-  CommandRegistry.register(roleremoveCommand);
-  CommandRegistry.register(rolecreateCommand);
+  CommandRegistry.register(roleCommand);
   CommandRegistry.register(rroleCommand);
 
   // Quarantine
