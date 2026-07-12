@@ -24,6 +24,7 @@
     "ioredis": "^5.4.1",
     "libsodium-wrappers": "^0.8.4",
     "prisma": "^5.16.0",
+    "youtube-ext": "^1.1.25",
     "zod": "^3.23.8"
   },
   "devDependencies": {

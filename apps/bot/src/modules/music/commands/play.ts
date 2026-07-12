@@ -38,7 +38,7 @@ export const playCommand: Command = {
 
     try {
       const isUrl = /^https?:\/\//.test(query);
-      const searchEngine = isUrl ? QueryType.AUTO : QueryType.SPOTIFY_SEARCH;
+      const searchEngine = isUrl ? QueryType.AUTO : QueryType.AUTO_SEARCH;
 
       const { track } = await player.play((voiceChannel as any), query, {
         searchEngine,
