@@ -7,6 +7,15 @@ import { saveMusicState, clearMusicState, loadMusicState } from "./musicState.js
 import { prisma } from "./db.js";
 
 let playerInstance: Player | null = null;
+const nowPlayingMessages = new Map<string, any>();
+
+const deleteLastMsg = (guildId: string) => {
+  const msg = nowPlayingMessages.get(guildId);
+  if (msg) {
+    msg.delete().catch(() => null);
+    nowPlayingMessages.delete(guildId);
+  }
+};
 
 export async function setupMusicPlayer(client: Client) {
   if (playerInstance) return playerInstance;
@@ -18,11 +27,15 @@ export async function setupMusicPlayer(client: Client) {
   await player.extractors.loadMulti(DefaultExtractors);
 
   // Events
-  player.events.on("playerStart", (queue, track) => {
+  player.events.on("playerStart", async (queue, track) => {
     const channel = queue.metadata as any;
     if (channel && channel.send) {
+      deleteLastMsg(queue.guild.id);
       const payload = buildNowPlayingPayload(queue, track);
-      channel.send(payload).catch(() => null);
+      const msg = await channel.send(payload).catch(() => null);
+      if (msg) {
+        nowPlayingMessages.set(queue.guild.id, msg);
+      }
     }
     
     // Save state
@@ -40,6 +53,14 @@ export async function setupMusicPlayer(client: Client) {
     }
   });
 
+  player.events.on("playerFinish", (queue, track) => {
+    deleteLastMsg(queue.guild.id);
+  });
+
+  player.events.on("playerSkip", (queue, track) => {
+    deleteLastMsg(queue.guild.id);
+  });
+
   player.events.on("audioTrackAdd", (queue) => {
     saveMusicState(queue).catch(console.error);
   });
@@ -49,6 +70,7 @@ export async function setupMusicPlayer(client: Client) {
   });
 
   player.events.on("emptyQueue", (queue) => {
+    deleteLastMsg(queue.guild.id);
     const channel = queue.metadata as any;
     if (channel && channel.send) {
       channel.send({ embeds: [new UniversalEmbed("info").setDescription("The queue has ended. I will leave the channel shortly unless 24/7 mode is enabled.")] }).catch(() => null);
@@ -57,6 +79,7 @@ export async function setupMusicPlayer(client: Client) {
   });
 
   player.events.on("emptyChannel", (queue) => {
+    deleteLastMsg(queue.guild.id);
     const channel = queue.metadata as any;
     if (channel && channel.send) {
       channel.send({ embeds: [new UniversalEmbed("error").setDescription("Leaving the voice channel because it's empty and 24/7 mode is not enabled.")] }).catch(() => null);
@@ -65,6 +88,7 @@ export async function setupMusicPlayer(client: Client) {
   });
 
   player.events.on("disconnect", (queue) => {
+    deleteLastMsg(queue.guild.id);
     // Only send if it naturally disconnected due to inactivity (not manually stopped)
     const channel = queue.metadata as any;
     if (channel && channel.send) {
@@ -75,6 +99,7 @@ export async function setupMusicPlayer(client: Client) {
 
   player.events.on("error", (queue, error) => {
     console.error(`[Music Error] ${error.message}`);
+    deleteLastMsg(queue.guild.id);
     const channel = queue.metadata as any;
     if (channel && channel.send) {
       channel.send({ embeds: [new UniversalEmbed("error").setDescription("An error occurred while playing music.")] }).catch(() => null);
