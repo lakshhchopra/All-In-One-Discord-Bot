@@ -1,4 +1,5 @@
 import { Command } from "../../../commands/command.js";
+import { QueryType } from "discord-player";
 import { UniversalEmbed } from "../../../services/embed.js";
 import { getPlayer } from "../../../services/music.js";
 import { prisma } from "../../../services/db.js";
@@ -36,7 +37,11 @@ export const playCommand: Command = {
     const msg = await ctx.reply({ embeds: [UniversalEmbed.info(`🔍 Searching for **${query}**...`, ctx.guild)] });
 
     try {
+      const isUrl = /^https?:\/\//.test(query);
+      const searchEngine = isUrl ? QueryType.AUTO : QueryType.SPOTIFY_SEARCH;
+
       const { track } = await player.play((voiceChannel as any), query, {
+        searchEngine,
         requestedBy: (ctx.user as any),
         nodeOptions: {
           metadata: ctx.channel,
