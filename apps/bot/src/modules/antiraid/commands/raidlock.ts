@@ -10,7 +10,7 @@ export const raidlockCommand: Command = {
   permissionLevel: "ADMIN",
   usage: "raidlock",
   examples: ["raidlock"],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const textChannels = ctx.guild.channels.cache.filter(c => c.isTextBased() && !c.isDMBased());
     for (const [_, ch] of textChannels) {
       try {
@@ -27,3 +27,4 @@ export const raidlockCommand: Command = {
     return ctx.reply({ embeds: [UniversalEmbed.success("🚨 Server locked down. All channels locked from sending messages.", ctx.guild)] });
   }
 };
+

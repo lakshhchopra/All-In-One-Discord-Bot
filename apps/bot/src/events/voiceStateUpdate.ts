@@ -133,22 +133,22 @@ export async function handleVoiceStateUpdate(oldState: VoiceState, newState: Voi
       embed
         .setColor(0x2ecc71)
         .setTitle("🔊 Voice Channel Joined")
-        .setDescription(`• **Member:** ${member} (\`${member.id}\`)\n• **Channel:** ${newCh} (\`${newCh.id}\`)`);
+        .setDescription(`> **Member:** ${member} (\`${member.id}\`)\n> **Channel:** ${newCh} (\`${newCh.id}\`)`);
       await sendGuildLog(guild, "voice", embed);
     } else if (oldCh && !newCh) {
       embed
         .setColor(0xe74c3c)
         .setTitle("🔇 Voice Channel Left")
-        .setDescription(`• **Member:** ${member} (\`${member.id}\`)\n• **Channel:** ${oldCh} (\`${oldCh.id}\`)`);
+        .setDescription(`> **Member:** ${member} (\`${member.id}\`)\n> **Channel:** ${oldCh} (\`${oldCh.id}\`)`);
       await sendGuildLog(guild, "voice", embed);
     } else if (oldCh && newCh && oldCh.id !== newCh.id) {
       embed
         .setColor(0x3498db)
         .setTitle("🔀 Voice Channel Switched")
         .setDescription(
-          `• **Member:** ${member} (\`${member.id}\`)\n` +
-          `• **From:** ${oldCh} (\`${oldCh.id}\`)\n` +
-          `• **To:** ${newCh} (\`${newCh.id}\`)`
+          `> **Member:** ${member} (\`${member.id}\`)\n` +
+          `> **From:** ${oldCh} (\`${oldCh.id}\`)\n` +
+          `> **To:** ${newCh} (\`${newCh.id}\`)`
         );
       await sendGuildLog(guild, "voice", embed);
     }

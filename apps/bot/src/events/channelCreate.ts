@@ -57,10 +57,10 @@ export async function handleChannelCreate(channel: GuildChannel): Promise<void> 
       .setColor(0x2ecc71)
       .setTitle("🆕 Channel Created")
       .setDescription(
-        `• **Channel:** <#${channel.id}> (\`${channel.name}\`)\n` +
-        `• **ID:** \`${channel.id}\`\n` +
-        `• **Type:** \`${channel.type}\`\n` +
-        (executor ? `• **Created By:** ${executor} (\`${executor.id}\`)` : `• **Created By:** Unknown`)
+        `> **Channel:** <#${channel.id}> (\`${channel.name}\`)\n` +
+        `> **ID:** \`${channel.id}\`\n` +
+        `> **Type:** \`${channel.type}\`\n` +
+        (executor ? `> **Created By:** ${executor} (\`${executor.id}\`)` : `> **Created By:** Unknown`)
       )
       .setTimestamp();
     await sendGuildLog(guild, "channels", embed);

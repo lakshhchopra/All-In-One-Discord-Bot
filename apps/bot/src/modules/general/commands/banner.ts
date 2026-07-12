@@ -7,7 +7,7 @@ export const bannerCommand: Command = {
   category: "General Commands",
   usage: "banner [member]",
   examples: ["banner", "banner @member"],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const targetMember = ctx.getMemberOption("member", 0) || ctx.member;
 
     // Fetch user to get banner data
@@ -24,3 +24,4 @@ export const bannerCommand: Command = {
     return ctx.reply({ embeds: [embed] });
   }
 };
+

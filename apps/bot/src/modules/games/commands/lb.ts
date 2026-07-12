@@ -15,7 +15,7 @@ export const lbCommand: Command = {
     "lb messages",
     "lb invites"
   ],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const sub = ctx.getStringOption("type", 0)?.toLowerCase();
 
     if (sub === "count" || sub === "counting") {
@@ -163,3 +163,4 @@ export const lbCommand: Command = {
     return ctx.reply({ embeds: [UniversalEmbed.info("Usage: `lb <count | messages | invites | dailymessage>`", ctx.guild)] });
   }
 };
+

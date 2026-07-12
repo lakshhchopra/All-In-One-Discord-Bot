@@ -28,7 +28,7 @@ export const embedCommand: Command = {
     "embed show rules",
     "embed delete rules"
   ],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const subcommand = ctx.getStringOption("subcommand", 0)?.toLowerCase();
     const validSubcommands = ["create", "edit", "save", "rename", "send", "post", "export", "import", "list", "show", "delete"];
 
@@ -90,3 +90,4 @@ export const embedCommand: Command = {
     }
   }
 };
+

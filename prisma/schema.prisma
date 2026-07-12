@@ -318,3 +318,9 @@ model StickyMessage {
 
   guild         GuildConfig @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
 }
+
+model BotDeveloper {
+  userId    String   @id
+  addedBy   String?
+  addedAt   DateTime @default(now())
+}

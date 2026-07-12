@@ -8,7 +8,7 @@ export const listboostersCommand: Command = {
   category: "General Commands",
   usage: "listboosters",
   examples: ["listboosters"],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const boosters = ctx.guild.members.cache.filter(m => m.premiumSinceTimestamp !== null);
     const description = boosters
       .map(m => `• **${m.user.tag}** (Since <t:${Math.floor(m.premiumSinceTimestamp! / 1000)}:R>)`)
@@ -22,3 +22,4 @@ export const listboostersCommand: Command = {
     return ctx.reply({ embeds: [embed] });
   }
 };
+

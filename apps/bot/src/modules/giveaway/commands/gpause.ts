@@ -11,7 +11,7 @@ export const gpauseCommand: Command = {
   permissionLevel: "MODERATOR",
   usage: "gpause <messageId>",
   examples: ["gpause 1135816865055256688"],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const messageId = ctx.getStringOption("messageId", 0);
     if (!messageId) return ctx.reply({ embeds: [UniversalEmbed.error("Usage: `gpause <messageId>`", ctx.guild)] }, 5);
 
@@ -67,3 +67,4 @@ export const gpauseCommand: Command = {
     return ctx.reply({ embeds: [UniversalEmbed.success("Giveaway paused successfully.", ctx.guild)] });
   }
 };
+

@@ -8,7 +8,7 @@ export const servericonCommand: Command = {
   category: "General Commands",
   usage: "servericon",
   examples: ["servericon"],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const iconUrl = ctx.guild.iconURL({ size: 1024 });
 
     if (!iconUrl) {
@@ -21,3 +21,4 @@ export const servericonCommand: Command = {
     return ctx.reply({ embeds: [embed] });
   }
 };
+

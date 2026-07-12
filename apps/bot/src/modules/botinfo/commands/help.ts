@@ -5,7 +5,9 @@ import { ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, 
 
 export const COMMAND_USAGES: Record<string, string> = {
   setprefix: "setprefix <new_prefix>",
+  noprefix: "noprefix <enable | disable | list> [member]",
   config: "config",
+  uptime: "uptime",
   help: "help [command]",
   greet: "greet <enable | disable | create | channel | delete | config | style | card | autodelete | test>",
   leavemsg: "leavemsg <enable | disable | set | show | reset | test>",
@@ -22,7 +24,7 @@ export const COMMAND_USAGES: Record<string, string> = {
   message: "message [member]",
   invites: "invites [member]",
   dailymessage: "dailymessage [member]",
-  gstart: "gstart <channel> <duration> <winners> <prize>",
+  gcreate: "gcreate <channel> <duration> <winners> <prize>",
   gend: "gend <messageId>",
   greroll: "greroll <messageId>",
   gresume: "gresume <messageId>",
@@ -121,7 +123,7 @@ export const CATEGORY_DETAILS: Record<string, string> = {
 
   bot_info:
     `> **Bot Info Commands**\n` +
-    `\`prefix\`, \`prefix set\`, \`prefix reset\`, \`prefix add\`, \`prefix show\`, \`prefix remove\`, \`noprefix enable|disable\`, \`info\`, \`status\`, \`ping\`, \`botinfo\`, \`aboutdev\``,
+    `\`prefix\`, \`prefix set\`, \`prefix reset\`, \`prefix add\`, \`prefix show\`, \`prefix remove\`, \`noprefix enable|disable|list\`, \`info\`, \`status\`, \`ping\`, \`botinfo\`, \`uptime\`, \`aboutdev\``,
 
   ticket:
     `> **Ticket Commands**\n` +
@@ -153,7 +155,7 @@ export const CATEGORY_DETAILS: Record<string, string> = {
 
   giveaways:
     `> **Giveaway Commands**\n` +
-    `\`gstart\`, \`greroll\`, \`gend\`, \`gresume\`, \`gpause\`, \`gparticipants\``,
+    `\`gcreate\`, \`greroll\`, \`gend\`, \`gresume\`, \`gpause\`, \`gparticipants\``,
 
   loggings:
     `> **Logging Commands**\n` +
@@ -163,7 +165,11 @@ export const CATEGORY_DETAILS: Record<string, string> = {
     `> **Counting**\n` +
     `\`setup count channel\`, \`lb count\`, \`count\`\n\n` +
     `> **Ship**\n` +
-    `\`ship\`, \`ship random\`, \`hate\`, \`love\`, \`friendship\``
+    `\`ship\`, \`ship random\`, \`hate\`, \`love\`, \`friendship\``,
+
+  music:
+    `> **Music Commands**\n` +
+    `\`play\`, \`pause\`, \`resume\`, \`stop\`, \`skip\`, \`queue\`, \`nowplaying\`, \`volume\`, \`forward\`, \`rewind\`, \`loop\`, \`join\`, \`247\``
 };
 
 export function resolveStandardCategoryName(input: string): string | null {
@@ -182,6 +188,7 @@ export function resolveStandardCategoryName(input: string): string | null {
   if (norm === "giveaways") return "Giveaways";
   if (norm === "loggings") return "Loggings";
   if (norm === "mini_games" || norm === "mini games") return "Mini Games";
+  if (norm === "music") return "Music";
   return null;
 }
 
@@ -198,9 +205,10 @@ export function resolveCategory(input: string): string | null {
   if (norm === "messages" || norm === "invites" || norm === "messagings" || norm === "messagings_invites" || norm === "messagings & invites") return "messagings_invites";
   if (norm === "moderation" || norm === "mod" || norm === "basic moderation") return "moderation";
   if (norm === "general" || norm === "general commands" || norm === "general_commands") return "general_commands";
-  if (norm === "giveaway" || norm === "giveaways") return "giveaways";
-  if (norm === "logging" || norm === "loggings") return "loggings";
-  if (norm === "games" || norm === "minigames" || norm === "mini games" || norm === "mini_games" || norm === "counting" || norm === "ship") return "mini_games";
+  if (norm === "giveaways" || norm === "giveaway") return "giveaways";
+  if (norm === "loggings" || norm === "logging" || norm === "logs") return "loggings";
+  if (norm === "mini games" || norm === "mini_games" || norm === "minigames" || norm === "games") return "mini_games";
+  if (norm === "music" || norm === "song" || norm === "audio") return "music";
   return null;
 }
 
@@ -256,6 +264,7 @@ export function getCommandModule(category: string): string {
   if (catLower === "giveaways") return "giveaway";
   if (catLower === "loggings") return "module";
   if (catLower === "mini games") return "gwy";
+  if (catLower === "music") return "voice";
   return "settings";
 }
 
@@ -294,7 +303,8 @@ export function getHelpComponents(userId: string) {
         { label: "General Commands", value: "general_commands", description: "Serverinfo, userinfo & member list", emoji: parseEmoji(EMOJIS.settings) as any },
         { label: "Giveaways", value: "giveaways", description: "Host, reroll & manage server giveaways", emoji: parseEmoji(EMOJIS.giveaway) as any },
         { label: "Loggings", value: "loggings", description: "Action logging configuration", emoji: parseEmoji(EMOJIS.module) as any },
-        { label: "Mini Games", value: "mini_games", description: "Counting game and ship compatibility", emoji: parseEmoji(EMOJIS.gwy) as any }
+        { label: "Mini Games", value: "mini_games", description: "Counting game and ship compatibility", emoji: parseEmoji(EMOJIS.gwy) as any },
+        { label: "Music", value: "music", description: "Play and manage voice channel music", emoji: parseEmoji(EMOJIS.voice) as any }
       ])
   );
 
@@ -328,7 +338,8 @@ export function getHomeEmbed(prefix: string, guild?: Guild) {
       `${EMOJIS.settings}・**General Commands**\n` +
       `${EMOJIS.giveaway}・**Giveaways**\n` +
       `${EMOJIS.module}・**Loggings**\n` +
-      `${EMOJIS.gwy}・**Mini Games**\n\n` +
+      `${EMOJIS.gwy}・**Mini Games**\n` +
+      `${EMOJIS.voice}・**Music**\n\n` +
       `🔗 **Links**\n` +
       `[Support](https://discord.gg/gupshup)`
     );
@@ -348,9 +359,11 @@ export function getCategoryEmbed(categoryName: string, prefix: string, guild?: G
   return embed;
 }
 
-export function getAllCommandsEmbed(prefix: string, guild?: Guild) {
-  const embed = new UniversalEmbed("neutral", undefined, guild)
-    .setTitle("All Commands");
+export function getAllCommandsEmbed(prefix: string, guild?: Guild): UniversalEmbed[] {
+  const embeds: UniversalEmbed[] = [];
+  let currentEmbed = new UniversalEmbed("neutral", undefined, guild)
+    .setTitle("All Commands (Page 1)");
+  let currentEmbedCharCount = currentEmbed.data.title!.length;
 
   const categoriesList = [
     "antinuke_automod",
@@ -366,29 +379,48 @@ export function getAllCommandsEmbed(prefix: string, guild?: Guild) {
     "general_commands",
     "giveaways",
     "loggings",
-    "mini_games"
+    "mini_games",
+    "music"
   ];
+
+  let pageNum = 1;
+
   for (const cat of categoriesList) {
     const stdName = resolveStandardCategoryName(cat) || cat;
     const detailText = CATEGORY_DETAILS[cat as keyof typeof CATEGORY_DETAILS];
     if (detailText) {
-      // Extract all inline code blocks containing commands to list under the fields
       const cmdRegex = /`([^`]+)`/g;
       const cmds: string[] = [];
       let match;
       while ((match = cmdRegex.exec(detailText)) !== null) {
-        if (!cmds.includes(match[1])) {
-          cmds.push(match[1]);
+        const fullCmd = match[1]; // Keep full command including subcommands
+        if (!cmds.includes(fullCmd)) {
+          cmds.push(fullCmd);
         }
       }
+      
       if (cmds.length > 0) {
         const formattedCmds = cmds.map(c => `\`${c}\``);
         let currentFieldVal = "";
         let partIndex = 1;
+        
         for (const cmd of formattedCmds) {
           const addition = (currentFieldVal ? ", " : "") + cmd;
           if (currentFieldVal.length + addition.length > 1020) {
-            embed.addFields({ name: partIndex === 1 ? stdName : `${stdName} (Cont.)`, value: currentFieldVal });
+            const fieldName = partIndex === 1 ? stdName : `${stdName} (Cont.)`;
+            const fieldLen = fieldName.length + currentFieldVal.length;
+            
+            if (currentEmbedCharCount + fieldLen > 5500) {
+              embeds.push(currentEmbed);
+              pageNum++;
+              currentEmbed = new UniversalEmbed("neutral", undefined, guild)
+                .setTitle(`All Commands (Page ${pageNum})`);
+              currentEmbedCharCount = currentEmbed.data.title!.length;
+            }
+            
+            currentEmbed.addFields({ name: fieldName, value: currentFieldVal });
+            currentEmbedCharCount += fieldLen;
+            
             currentFieldVal = cmd;
             partIndex++;
           } else {
@@ -396,13 +428,26 @@ export function getAllCommandsEmbed(prefix: string, guild?: Guild) {
           }
         }
         if (currentFieldVal) {
-          embed.addFields({ name: partIndex === 1 ? stdName : `${stdName} (Cont.)`, value: currentFieldVal });
+          const fieldName = partIndex === 1 ? stdName : `${stdName} (Cont.)`;
+          const fieldLen = fieldName.length + currentFieldVal.length;
+          
+          if (currentEmbedCharCount + fieldLen > 5500) {
+            embeds.push(currentEmbed);
+            pageNum++;
+            currentEmbed = new UniversalEmbed("neutral", undefined, guild)
+              .setTitle(`All Commands (Page ${pageNum})`);
+            currentEmbedCharCount = currentEmbed.data.title!.length;
+          }
+          
+          currentEmbed.addFields({ name: fieldName, value: currentFieldVal });
+          currentEmbedCharCount += fieldLen;
         }
       }
     }
   }
 
-  return embed;
+  embeds.push(currentEmbed);
+  return embeds;
 }
 
 export const helpCommand: Command = {
@@ -411,7 +456,7 @@ export const helpCommand: Command = {
   category: "Configuration",
   usage: "help [command | category]",
   examples: ["help", "help ban", "help moderation"],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     let targetCmd = ctx.getStringOption("command", 0);
     let query = targetCmd?.toLowerCase().trim();
     if (!ctx.isInteraction && ctx.args.length > 0) {
@@ -515,3 +560,4 @@ export const helpCommand: Command = {
     return ctx.reply({ embeds: [homeEmbed], components: components as any });
   }
 };
+

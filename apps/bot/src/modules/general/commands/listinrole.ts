@@ -8,7 +8,7 @@ export const listinroleCommand: Command = {
   category: "General Commands",
   usage: "listinrole <@role>",
   examples: ["listinrole @VIP"],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const role = ctx.getRoleOption("role", 0) || (ctx.isInteraction ? null : (ctx.source as any).mentions?.roles?.first());
     if (!role) {
       return ctx.reply({ embeds: [UniversalEmbed.error("Please specify a role to list members of.", ctx.guild)] }, 5);
@@ -24,3 +24,4 @@ export const listinroleCommand: Command = {
     return ctx.reply({ embeds: [embed] });
   }
 };
+

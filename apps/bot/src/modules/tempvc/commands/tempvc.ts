@@ -1,4 +1,4 @@
-import { Command } from "../../../commands/types.js";
+import { Command } from "../../../commands/command.js";
 import { UniversalEmbed } from "../../../services/embed.js";
 
 // Import all subcommands
@@ -46,7 +46,7 @@ export const tempvcCommand: Command = {
   aliases: ["tvc", "voice", "vc"],
   description: "Temporary voice channel configuration and management commands.",
   category: "TempVC",
-  permissionLevel: "USER",
+  permissionLevel: "EVERYONE",
   usage: "tempvc <subcommand>",
   execute: async (ctx: any) => {
     const subcommandName = ctx.args[0]?.toLowerCase();

@@ -10,7 +10,7 @@ export const grerollCommand: Command = {
   permissionLevel: "MODERATOR",
   usage: "greroll <messageId>",
   examples: ["greroll 1135816865055256688"],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const messageId = ctx.getStringOption("messageId", 0);
     if (!messageId) return ctx.reply({ embeds: [UniversalEmbed.error("Usage: `greroll <messageId>`", ctx.guild)] }, 5);
 
@@ -46,3 +46,4 @@ export const grerollCommand: Command = {
     return ctx.reply({ embeds: [UniversalEmbed.success("Giveaway rerolled successfully.", ctx.guild)] });
   }
 };
+

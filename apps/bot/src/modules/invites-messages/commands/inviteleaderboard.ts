@@ -11,7 +11,7 @@ export const inviteLeaderboardCommand: Command = {
   category: "Invite Tracking",
   usage: "inviteleaderboard",
   examples: ["inviteleaderboard"],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     await ctx.reply("⏳ Generating leaderboard card...");
 
     const allStats = await prisma.memberStats.findMany({
@@ -55,3 +55,4 @@ export const inviteLeaderboardCommand: Command = {
     return ctx.reply({ embeds: [embed], files: [attachment] });
   }
 };
+

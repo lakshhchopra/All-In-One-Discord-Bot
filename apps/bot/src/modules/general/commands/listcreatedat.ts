@@ -8,7 +8,7 @@ export const listcreatedatCommand: Command = {
   category: "General Commands",
   usage: "listcreatedat",
   examples: ["listcreatedat"],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const sorted = [...ctx.guild.members.cache.values()]
       .sort((a, b) => a.user.createdTimestamp - b.user.createdTimestamp)
       .slice(0, 15);
@@ -23,3 +23,4 @@ export const listcreatedatCommand: Command = {
     return ctx.reply({ embeds: [embed] });
   }
 };
+

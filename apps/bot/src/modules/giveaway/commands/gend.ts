@@ -10,7 +10,7 @@ export const gendCommand: Command = {
   permissionLevel: "MODERATOR",
   usage: "gend <messageId>",
   examples: ["gend 1135816865055256688"],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const messageId = ctx.getStringOption("messageId", 0);
     if (!messageId) return ctx.reply({ embeds: [UniversalEmbed.error("Usage: `gend <messageId>`", ctx.guild)] }, 5);
 
@@ -42,3 +42,4 @@ export const gendCommand: Command = {
     });
   }
 };
+

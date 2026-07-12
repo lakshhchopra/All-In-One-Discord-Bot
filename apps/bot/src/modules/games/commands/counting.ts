@@ -13,7 +13,7 @@ export const countingCommand: Command = {
     "counting show",
     "counting reset"
   ],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const action = ctx.getStringOption("action", 0)?.toLowerCase();
 
     if (action === "channel") {
@@ -64,3 +64,4 @@ export const countingCommand: Command = {
     return ctx.reply({ embeds: [UniversalEmbed.info("Usage: `counting [channel|show|reset] ...`", ctx.guild)] });
   }
 };
+

@@ -9,7 +9,7 @@ export const listmodsCommand: Command = {
   category: "General Commands",
   usage: "listmods",
   examples: ["listmods"],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const mods = ctx.guild.members.cache.filter(m => m.permissions.has(PermissionFlagsBits.ModerateMembers) && !m.user.bot);
     const description = mods.map(m => `• **${m.user.tag}** (${m.id})`).join("\n") || "No moderators found.";
 
@@ -19,3 +19,4 @@ export const listmodsCommand: Command = {
     return ctx.reply({ embeds: [embed] });
   }
 };
+

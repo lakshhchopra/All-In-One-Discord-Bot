@@ -9,7 +9,7 @@ export const userinfoCommand: Command = {
   usage: "userinfo [member]",
   aliases: ["ui"],
   examples: ["userinfo", "userinfo @member", "userinfo 982232494223020042"],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const member = ctx.getMemberOption("member", 0) || ctx.member;
 
     const stats = await prisma.memberStats.findUnique({
@@ -30,3 +30,4 @@ export const userinfoCommand: Command = {
     return ctx.reply({ embeds: [embed] });
   }
 };
+

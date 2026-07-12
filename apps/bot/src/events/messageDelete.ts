@@ -12,20 +12,25 @@ export async function handleMessageDelete(message: any): Promise<void> {
     })
     .setTitle("🗑️ Message Deleted")
     .setDescription(
-      `• **User:** ${message.author} (\`${message.author.id}\`)\n` +
-      `• **Channel:** ${message.channel} (\`${message.channel.id}\`)\n` +
-      `• **Sent At:** <t:${Math.floor(message.createdTimestamp / 1000)}:f> (<t:${Math.floor(message.createdTimestamp / 1000)}:R>)`
+      `> **User:** ${message.author} (\`${message.author.id}\`)\n` +
+      `> **Channel:** ${message.channel}\n` +
+      `> **Sent:** <t:${Math.floor(message.createdTimestamp / 1000)}:f> (<t:${Math.floor(message.createdTimestamp / 1000)}:R>)`
     )
     .addFields({
-      name: "Content",
-      value: message.content ? (message.content.length > 1024 ? message.content.slice(0, 1018) + "..." : message.content) : "*None (embed or attachment only)*"
+      name: "📄 Content",
+      value: message.content
+        ? message.content.length > 1024
+          ? message.content.slice(0, 1018) + "..."
+          : message.content
+        : "*No text content (embed or attachment only)*"
     })
+    .setFooter({ text: `Message ID: ${message.id}` })
     .setTimestamp();
 
   if (message.attachments && message.attachments.size > 0) {
     embed.addFields({
-      name: "Attachments",
-      value: message.attachments.map((a: any) => `📁 [${a.name}](${a.url})`).join("\n")
+      name: "📎 Attachments",
+      value: message.attachments.map((a: any) => `[${a.name}](${a.url})`).join("\n")
     });
   }
 

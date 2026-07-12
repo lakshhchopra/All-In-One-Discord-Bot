@@ -1,6 +1,6 @@
-import { Command } from "../../../../../commands/types.js";
-import { prisma } from "../../../../../services/db.js";
-import { UniversalEmbed } from "../../../../../services/embed.js";
+import { Command } from "../../../../commands/command.js";
+import { prisma } from "../../../../services/db.js";
+import { UniversalEmbed } from "../../../../services/embed.js";
 import { VoiceChannel } from "discord.js";
 
 export const tempvcuntrustCommand: Command = {
@@ -8,7 +8,7 @@ export const tempvcuntrustCommand: Command = {
   aliases: [],
   description: "Untrust a user from joining your locked TempVC",
   category: "TempVC",
-  permissionLevel: "USER",
+  permissionLevel: "EVERYONE",
   usage: "tempvc untrust <user>",
   execute: async (ctx: any) => {
     const memberVoiceChannel = ctx.member?.voice?.channel;

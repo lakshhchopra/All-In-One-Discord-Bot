@@ -9,7 +9,7 @@ export const configCommand: Command = {
   permissionLevel: "ADMIN",
   usage: "config [export | import <json>]",
   examples: ["config", "config export", "config import {...}"],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const sub = ctx.getStringOption("action", 0)?.toLowerCase();
 
     if (sub === "export") {
@@ -67,3 +67,4 @@ export const configCommand: Command = {
     return ctx.reply({ embeds: [embed] });
   }
 };
+

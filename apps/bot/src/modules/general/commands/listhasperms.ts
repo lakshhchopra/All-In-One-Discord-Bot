@@ -9,7 +9,7 @@ export const listhaspermsCommand: Command = {
   category: "General Commands",
   usage: "listhasperms <permission>",
   examples: ["listhasperms BanMembers"],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const permName = ctx.getStringOption("permission", 0);
     if (!permName || !(permName in PermissionFlagsBits)) {
       return ctx.reply({ embeds: [UniversalEmbed.error("Please specify a valid permission flag name (e.g. `BanMembers`, `KickMembers`).", ctx.guild)] }, 5);
@@ -26,3 +26,4 @@ export const listhaspermsCommand: Command = {
     return ctx.reply({ embeds: [embed] });
   }
 };
+

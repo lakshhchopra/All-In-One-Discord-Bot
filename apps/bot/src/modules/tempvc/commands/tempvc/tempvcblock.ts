@@ -1,6 +1,6 @@
-import { Command } from "../../../../../commands/types.js";
-import { prisma } from "../../../../../services/db.js";
-import { UniversalEmbed } from "../../../../../services/embed.js";
+import { Command } from "../../../../commands/command.js";
+import { prisma } from "../../../../services/db.js";
+import { UniversalEmbed } from "../../../../services/embed.js";
 import { VoiceChannel } from "discord.js";
 
 export const tempvcblockCommand: Command = {
@@ -8,7 +8,7 @@ export const tempvcblockCommand: Command = {
   aliases: [],
   description: "Block a user from joining your TempVC",
   category: "TempVC",
-  permissionLevel: "USER",
+  permissionLevel: "EVERYONE",
   usage: "tempvc block <user>",
   execute: async (ctx: any) => {
     const memberVoiceChannel = ctx.member?.voice?.channel;

@@ -1,5 +1,6 @@
 import { Guild, GuildMember } from "discord.js";
 import { prisma } from "../services/db.js";
+import { config } from "../config/index.js";
 
 /**
  * Checks if a user is completely whitelisted (Owner, Extra Owner, or Whitelisted User/Role).
@@ -103,4 +104,22 @@ export async function isIgnored(
   if (isTargetIgnored) return true;
 
   return false;
+}
+
+/**
+ * Checks if a user is a Global Bot Developer.
+ * Bot Developers are either hardcoded in config or added via database.
+ */
+export async function isDeveloper(userId: string): Promise<boolean> {
+  // 1. Check hardcoded config array
+  if (config.DEVELOPER_IDS?.split(",").includes(userId)) {
+    return true;
+  }
+
+  // 2. Check BotDeveloper database table
+  const dbDev = await prisma.botDeveloper.findUnique({
+    where: { userId }
+  });
+  
+  return !!dbDev;
 }

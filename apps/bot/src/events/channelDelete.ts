@@ -93,10 +93,10 @@ export async function handleChannelDelete(channel: DMChannel | NonThreadGuildBas
         .setColor(0xe74c3c)
         .setTitle("🗑️ Channel Deleted")
         .setDescription(
-          `• **Channel:** \`#${channelName}\`\n` +
-          `• **ID:** \`${guildChannel.id}\`\n` +
-          `• **Type:** \`${guildChannel.type}\`\n` +
-          (executor ? `• **Deleted By:** ${executor} (\`${executor.id}\`)` : `• **Deleted By:** Unknown`)
+          `> **Channel:** \`#${channelName}\`\n` +
+          `> **ID:** \`${guildChannel.id}\`\n` +
+          `> **Type:** \`${guildChannel.type}\`\n` +
+          (executor ? `> **Deleted By:** ${executor} (\`${executor.id}\`)` : `> **Deleted By:** Unknown`)
         )
         .setTimestamp();
       await sendGuildLog(guild, "channels", embed);

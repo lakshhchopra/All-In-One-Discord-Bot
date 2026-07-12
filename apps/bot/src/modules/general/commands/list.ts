@@ -13,7 +13,7 @@ export const listCommand: Command = {
     "list inrole @Member",
     "list hasperms BanMembers"
   ],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const sub = ctx.getStringOption("type", 0)?.toLowerCase();
 
     if (!sub) {
@@ -132,3 +132,4 @@ export const listCommand: Command = {
     return ctx.reply({ embeds: [UniversalEmbed.info("Usage: `list <mods | admins | bots | roles | emojis | channels | bans | timeouts | boosters | createdat | joinedat | inrole | hasperms>`", ctx.guild)] });
   }
 };
+

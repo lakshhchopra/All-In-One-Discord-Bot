@@ -8,7 +8,7 @@ export const listemojisCommand: Command = {
   category: "General Commands",
   usage: "listemojis",
   examples: ["listemojis"],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const emojis = ctx.guild.emojis.cache.map(e => `${e} | \`:${e.name}:\` (${e.id})`).slice(0, 20).join("\n") +
       (ctx.guild.emojis.cache.size > 20 ? "\n... and more" : "");
 
@@ -19,3 +19,4 @@ export const listemojisCommand: Command = {
     return ctx.reply({ embeds: [embed] });
   }
 };
+

@@ -7,7 +7,7 @@ export const joinedatCommand: Command = {
   category: "General Commands",
   usage: "joinedat [member]",
   examples: ["joinedat", "joinedat @member"],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const member = ctx.getMemberOption("member", 0);
 
     if (member) {
@@ -32,3 +32,4 @@ export const joinedatCommand: Command = {
     return ctx.reply({ embeds: [embed] });
   }
 };
+

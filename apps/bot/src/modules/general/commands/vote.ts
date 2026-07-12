@@ -7,7 +7,7 @@ export const voteCommand: Command = {
   category: "General Commands",
   usage: "vote",
   examples: ["vote"],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const embed = UniversalEmbed.neutral("Vote for Gupshup", ctx.guild)
       .setDescription(
         "Thank you for supporting Gupshup! Your votes help us reach more servers and support development.\n\n" +
@@ -18,3 +18,4 @@ export const voteCommand: Command = {
     return ctx.reply({ embeds: [embed] });
   }
 };
+

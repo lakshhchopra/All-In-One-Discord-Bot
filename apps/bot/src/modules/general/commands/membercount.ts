@@ -8,7 +8,7 @@ export const membercountCommand: Command = {
   usage: "membercount",
   aliases: ["mc"],
   examples: ["membercount"],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const total = ctx.guild.memberCount;
     const bots = ctx.guild.members.cache.filter(m => m.user.bot).size;
     const humans = total - bots;
@@ -22,3 +22,4 @@ export const membercountCommand: Command = {
     return ctx.reply({ embeds: [embed] });
   }
 };
+

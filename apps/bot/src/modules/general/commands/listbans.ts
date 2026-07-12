@@ -8,7 +8,7 @@ export const listbansCommand: Command = {
   category: "General Commands",
   usage: "listbans",
   examples: ["listbans"],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     try {
       const bans = await ctx.guild.bans.fetch({ limit: 20 });
       const str = bans.map(b => `• **${b.user.tag}** (${b.user.id})`).join("\n") || "No banned users.";
@@ -21,3 +21,4 @@ export const listbansCommand: Command = {
     }
   }
 };
+

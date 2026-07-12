@@ -1,6 +1,6 @@
-import { Command } from "../../../../../commands/types.js";
-import { prisma } from "../../../../../services/db.js";
-import { UniversalEmbed } from "../../../../../services/embed.js";
+import { Command } from "../../../../commands/command.js";
+import { prisma } from "../../../../services/db.js";
+import { UniversalEmbed } from "../../../../services/embed.js";
 import { VoiceChannel } from "discord.js";
 
 export const tempvcrenameCommand: Command = {
@@ -8,7 +8,7 @@ export const tempvcrenameCommand: Command = {
   aliases: ["name"],
   description: "Rename your TempVC",
   category: "TempVC",
-  permissionLevel: "USER",
+  permissionLevel: "EVERYONE",
   usage: "tempvc rename <name>",
   execute: async (ctx: any) => {
     const memberVoiceChannel = ctx.member?.voice?.channel;

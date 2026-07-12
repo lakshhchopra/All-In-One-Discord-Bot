@@ -6,7 +6,7 @@ export const variablesCommand: Command = {
   description: "Displays the guide for using placeholders and variables.",
   category: "Media",
   aliases: ["var", "vars", "placeholders"],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const embed = new UniversalEmbed("neutral", undefined, ctx.guild)
       .setTitle("🤖 Bot Variables - Placeholders & Functions")
       .setDescription(
@@ -93,3 +93,4 @@ export const variablesCommand: Command = {
     return ctx.reply({ embeds: [embed] });
   }
 };
+

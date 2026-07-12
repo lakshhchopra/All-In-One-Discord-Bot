@@ -7,7 +7,7 @@ export const roleinfoCommand: Command = {
   category: "General Commands",
   usage: "roleinfo <@role>",
   examples: ["roleinfo @Admin"],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const role = ctx.getRoleOption("role", 0);
     if (!role) return ctx.wrongUsage(roleinfoCommand);
 
@@ -30,3 +30,4 @@ export const roleinfoCommand: Command = {
     return ctx.reply({ embeds: [embed] });
   }
 };
+

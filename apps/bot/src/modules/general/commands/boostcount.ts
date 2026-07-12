@@ -8,7 +8,7 @@ export const boostcountCommand: Command = {
   usage: "boostcount",
   aliases: ["bc"],
   examples: ["boostcount"],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const boostCount = ctx.guild.premiumSubscriptionCount || 0;
     const tier = ctx.guild.premiumTier;
 
@@ -21,3 +21,4 @@ export const boostcountCommand: Command = {
     return ctx.reply({ embeds: [embed] });
   }
 };
+

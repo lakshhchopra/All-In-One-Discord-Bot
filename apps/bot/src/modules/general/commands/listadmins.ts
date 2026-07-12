@@ -9,7 +9,7 @@ export const listadminsCommand: Command = {
   category: "General Commands",
   usage: "listadmins",
   examples: ["listadmins"],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const admins = ctx.guild.members.cache.filter(m => m.permissions.has(PermissionFlagsBits.Administrator) && !m.user.bot);
     const description = admins.map(m => `• **${m.user.tag}** (${m.id})`).join("\n") || "No administrators found.";
 
@@ -19,3 +19,4 @@ export const listadminsCommand: Command = {
     return ctx.reply({ embeds: [embed] });
   }
 };
+

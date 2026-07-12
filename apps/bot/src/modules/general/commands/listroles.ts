@@ -8,7 +8,7 @@ export const listrolesCommand: Command = {
   category: "General Commands",
   usage: "listroles",
   examples: ["listroles"],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const roles = ctx.guild.roles.cache.map(r => `• **${r.name}** (${r.id})`).slice(0, 30).join("\n") +
       (ctx.guild.roles.cache.size > 30 ? "\n... and more" : "");
 
@@ -19,3 +19,4 @@ export const listrolesCommand: Command = {
     return ctx.reply({ embeds: [embed] });
   }
 };
+

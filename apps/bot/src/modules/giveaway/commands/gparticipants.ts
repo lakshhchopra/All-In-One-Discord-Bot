@@ -10,7 +10,7 @@ export const gparticipantsCommand: Command = {
   permissionLevel: "MODERATOR",
   usage: "gparticipants <messageId>",
   examples: ["gparticipants 1135816865055256688"],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const messageId = ctx.getStringOption("messageId", 0);
     if (!messageId) return ctx.reply({ embeds: [UniversalEmbed.error("Usage: `gparticipants <messageId>`", ctx.guild)] }, 5);
 
@@ -36,3 +36,4 @@ export const gparticipantsCommand: Command = {
     return ctx.reply({ embeds: [embed] });
   }
 };
+

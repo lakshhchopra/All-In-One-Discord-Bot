@@ -12,7 +12,7 @@ export const messagesResetCommand: Command = {
     "messagesreset @member",
     "messagesreset"
   ],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const target = ctx.getMemberOption("user", 0);
 
     if (target) {
@@ -30,3 +30,4 @@ export const messagesResetCommand: Command = {
     return ctx.reply({ embeds: [UniversalEmbed.success("Reset message counts for everyone.", ctx.guild)] });
   }
 };
+

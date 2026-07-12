@@ -8,7 +8,7 @@ export const serverinfoCommand: Command = {
   aliases: ["si"],
   usage: "serverinfo",
   examples: ["serverinfo"],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const guild = ctx.guild;
 
     const embed = UniversalEmbed.info(guild.name, guild)
@@ -24,3 +24,4 @@ export const serverinfoCommand: Command = {
     return ctx.reply({ embeds: [embed] });
   }
 };
+

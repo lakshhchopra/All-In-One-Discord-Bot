@@ -14,7 +14,7 @@ export const invitesCommand: Command = {
     "invites add @user 5",
     "invites reset @user"
   ],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const action = ctx.getStringOption("action", 0)?.toLowerCase();
 
     if (!action || (!["add", "reset"].includes(action) && !action.startsWith("<@"))) {
@@ -102,3 +102,4 @@ export const invitesCommand: Command = {
     }
   }
 };
+

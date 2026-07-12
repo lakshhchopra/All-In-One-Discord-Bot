@@ -7,16 +7,34 @@ export const noprefixCommand: Command = {
   description: "Allow specific users to use bot commands without any prefix.",
   category: "Bot Info",
   permissionLevel: "OWNER",
-  usage: "noprefix <enable | disable> <member>",
+  usage: "noprefix <enable | disable | list> [member]",
   examples: [
     "noprefix enable @member",
-    "noprefix disable @member"
+    "noprefix disable @member",
+    "noprefix list"
   ],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const action = ctx.getStringOption("action", 0)?.toLowerCase();
     const member = ctx.getMemberOption("member", 1);
 
-    if (!action || !member) {
+    if (!action) {
+      return ctx.reply({ embeds: [UniversalEmbed.info("Usage: `noprefix <enable | disable | list> [member]`", ctx.guild)] });
+    }
+
+    if (action === "list") {
+      const whitelisted = await prisma.whitelist.findMany({
+        where: { guildId: ctx.guild.id, type: "noprefix" }
+      });
+
+      if (whitelisted.length === 0) {
+        return ctx.reply({ embeds: [UniversalEmbed.info("No users have no-prefix mode enabled.", ctx.guild)] });
+      }
+
+      const list = whitelisted.map(w => `<@${w.targetId}>`).join(", ");
+      return ctx.reply({ embeds: [new UniversalEmbed("neutral", undefined, ctx.guild).setTitle("No-Prefix Users").setDescription(list)] });
+    }
+
+    if (!member) {
       return ctx.reply({ embeds: [UniversalEmbed.info("Usage: `noprefix <enable | disable> <member>`", ctx.guild)] });
     }
 
@@ -40,6 +58,7 @@ export const noprefixCommand: Command = {
       }
     }
 
-    return ctx.reply({ embeds: [UniversalEmbed.info("Usage: `noprefix <enable | disable> <member>`", ctx.guild)] });
+    return ctx.reply({ embeds: [UniversalEmbed.info("Usage: `noprefix <enable | disable | list> [member]`", ctx.guild)] });
   }
 };
+

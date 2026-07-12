@@ -17,21 +17,26 @@ export async function handleMessageUpdate(oldMessage: Message, newMessage: Messa
     })
     .setTitle("✏️ Message Edited")
     .setDescription(
-      `• **User:** ${newMessage.author} (\`${newMessage.author.id}\`)\n` +
-      `• **Channel:** ${newMessage.channel} (\`${newMessage.channel.id}\`)\n` +
-      `• **Length:** \`${oldLen}\` ➔ \`${newLen}\` chars (${charDiff >= 0 ? `+${charDiff}` : charDiff})\n` +
-      `• **Jump Link:** [Go to Message](${newMessage.url})`
+      `> **User:** ${newMessage.author} (\`${newMessage.author.id}\`)\n` +
+      `> **Channel:** ${newMessage.channel}\n` +
+      `> **Length:** \`${oldLen}\` → \`${newLen}\` chars (${charDiff >= 0 ? `+${charDiff}` : charDiff})\n` +
+      `> **[Jump to Message](${newMessage.url})**`
     )
     .addFields(
-      { 
-        name: "Before", 
-        value: oldMessage.content ? (oldMessage.content.length > 1024 ? oldMessage.content.slice(0, 1018) + "..." : oldMessage.content) : "*Empty / Unknown*" 
+      {
+        name: "📝 Before",
+        value: oldMessage.content
+          ? oldMessage.content.length > 1024 ? oldMessage.content.slice(0, 1018) + "..." : oldMessage.content
+          : "*Empty / Unknown*"
       },
-      { 
-        name: "After", 
-        value: newMessage.content ? (newMessage.content.length > 1024 ? newMessage.content.slice(0, 1018) + "..." : newMessage.content) : "*Empty*" 
+      {
+        name: "📝 After",
+        value: newMessage.content
+          ? newMessage.content.length > 1024 ? newMessage.content.slice(0, 1018) + "..." : newMessage.content
+          : "*Empty*"
       }
     )
+    .setFooter({ text: `Message ID: ${newMessage.id}` })
     .setTimestamp();
 
   await sendGuildLog(newMessage.guild, "messages", embed);

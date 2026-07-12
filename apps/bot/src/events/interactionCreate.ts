@@ -14,6 +14,7 @@ import {
   COMMAND_USAGES
 } from "../modules/botinfo/commands.js";
 import { handleTempVcInteraction } from "../modules/tempvc/panel.js";
+import { handleMusicInteraction } from "../modules/music/interactions.js";
 
 export async function handleInteractionCreate(interaction: Interaction) {
   // Handle TempVC Panel/Modal/Menu Interactions
@@ -23,6 +24,12 @@ export async function handleInteractionCreate(interaction: Interaction) {
     interaction.customId.startsWith("tempvc_")
   ) {
     await handleTempVcInteraction(interaction);
+    return;
+  }
+
+  // Handle Music Interactions
+  if (interaction.isButton() && interaction.customId && interaction.customId.startsWith("music_")) {
+    await handleMusicInteraction(interaction);
     return;
   }
 
@@ -263,13 +270,13 @@ export async function handleInteractionCreate(interaction: Interaction) {
         await interaction.message.delete();
       } 
       else if (action === "all") {
-        const embed = getAllCommandsEmbed(prefix, interaction.guild!);
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        const embeds = getAllCommandsEmbed(prefix, interaction.guild!);
+        await interaction.reply({ embeds, flags: 64 });
       } 
       else if (action === "category" && interaction.isStringSelectMenu()) {
         const selectedCategory = interaction.values[0];
         const embed = getCategoryEmbed(selectedCategory, prefix, interaction.guild!);
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: 64 });
       }
       else if (action === "show") {
         try {

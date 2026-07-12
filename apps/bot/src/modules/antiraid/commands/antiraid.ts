@@ -14,7 +14,7 @@ export const antiraidCommand: Command = {
     "antiraid joins 15",
     "antiraid accountage 7"
   ],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const action = ctx.getStringOption("action", 0)?.toLowerCase();
 
     if (action === "enable") {
@@ -80,3 +80,4 @@ export const antiraidCommand: Command = {
     return ctx.reply({ embeds: [UniversalEmbed.info("Usage: `antiraid [enable|disable|setup|joins|accountage] [limit/days]`", ctx.guild)] });
   }
 };
+

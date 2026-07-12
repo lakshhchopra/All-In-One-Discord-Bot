@@ -11,7 +11,7 @@ export const countCommand: Command = {
     "count",
     "count @member"
   ],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const target = ctx.getMemberOption("member", 0) || ctx.member;
     const stat = await prisma.countingStats.findUnique({
       where: { guildId_userId: { guildId: ctx.guild.id, userId: target.id } }
@@ -26,3 +26,4 @@ export const countCommand: Command = {
     });
   }
 };
+

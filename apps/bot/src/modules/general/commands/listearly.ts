@@ -8,9 +8,10 @@ export const listearlyCommand: Command = {
   category: "General Commands",
   usage: "listearly",
   examples: ["listearly"],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const embed = UniversalEmbed.neutral("Early Members List", ctx.guild)
       .setDescription("This user list filter requires OAuth2 indexing which is currently not syncable.");
     return ctx.reply({ embeds: [embed] });
   }
 };
+

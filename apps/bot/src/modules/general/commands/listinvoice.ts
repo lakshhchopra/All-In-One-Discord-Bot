@@ -8,9 +8,10 @@ export const listinvoiceCommand: Command = {
   category: "General Commands",
   usage: "listinvoice",
   examples: ["listinvoice"],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const embed = UniversalEmbed.neutral("Invoice List", ctx.guild)
       .setDescription("This database filter is currently not syncable.");
     return ctx.reply({ embeds: [embed] });
   }
 };
+

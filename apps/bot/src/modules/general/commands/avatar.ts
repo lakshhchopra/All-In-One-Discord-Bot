@@ -7,7 +7,7 @@ export const avatarCommand: Command = {
   category: "Information",
   usage: "avatar [member]",
   examples: ["avatar", "avatar @member"],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const member = ctx.getMemberOption("user", 0) || ctx.member;
     const url = member.user.displayAvatarURL({ size: 1024 });
 
@@ -16,3 +16,4 @@ export const avatarCommand: Command = {
     return ctx.reply({ embeds: [embed] });
   }
 };
+

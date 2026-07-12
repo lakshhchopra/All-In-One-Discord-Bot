@@ -7,7 +7,7 @@ export const serverbannerCommand: Command = {
   category: "General Commands",
   usage: "serverbanner",
   examples: ["serverbanner"],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const bannerUrl = ctx.guild.bannerURL({ size: 1024 });
 
     if (!bannerUrl) {
@@ -20,3 +20,4 @@ export const serverbannerCommand: Command = {
     return ctx.reply({ embeds: [embed] });
   }
 };
+

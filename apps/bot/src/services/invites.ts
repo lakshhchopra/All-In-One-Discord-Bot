@@ -55,10 +55,10 @@ export async function trackMemberJoin(member: GuildMember): Promise<{ inviterId:
       .setColor(0x3498db)
       .setTitle("📥 Member Joined")
       .setDescription(
-        `• **User:** ${member.user.tag} (${member})\n` +
-        `• **ID:** \`${member.id}\`\n` +
-        `• **Account Created:** <t:${Math.floor(member.user.createdTimestamp / 1000)}:R>\n` +
-        `• **Invite Type:** Direct / Vanity URL / Discovery`
+        `> **User:** ${member.user.tag} (${member})\n` +
+        `> **ID:** \`${member.id}\`\n` +
+        `> **Account Created:** <t:${Math.floor(member.user.createdTimestamp / 1000)}:R>\n` +
+        `> **Invite Type:** Direct / Vanity URL / Discovery`
       )
       .setTimestamp();
     await sendGuildLog(guild, "users", embed);
@@ -73,10 +73,10 @@ export async function trackMemberJoin(member: GuildMember): Promise<{ inviterId:
       .setColor(0x3498db)
       .setTitle("📥 Member Joined")
       .setDescription(
-        `• **User:** ${member.user.tag} (${member})\n` +
-        `• **ID:** \`${member.id}\`\n` +
-        `• **Account Created:** <t:${Math.floor(member.user.createdTimestamp / 1000)}:R>\n` +
-        `• **Invite Code:** \`${code}\` (Unknown Inviter)`
+        `> **User:** ${member.user.tag} (${member})\n` +
+        `> **ID:** \`${member.id}\`\n` +
+        `> **Account Created:** <t:${Math.floor(member.user.createdTimestamp / 1000)}:R>\n` +
+        `> **Invite Code:** \`${code}\` (Unknown Inviter)`
       )
       .setTimestamp();
     await sendGuildLog(guild, "users", embed);
@@ -139,13 +139,13 @@ export async function trackMemberJoin(member: GuildMember): Promise<{ inviterId:
     .setColor(0x2ecc71)
     .setTitle("📥 Member Joined via Invite")
     .setDescription(
-      `• **User:** ${member.user.tag} (${member})\n` +
-      `• **ID:** \`${member.id}\`\n` +
-      `• **Invited By:** <@${inviterId}> (\`${inviterId}\`)\n` +
-      `• **Total Invites:** \`${totalInvites}\` net invites\n` +
-      `• **Invite Code:** \`${code}\` (Uses: \`${resolvedInvite.uses || 0}\`)\n` +
-      `• **Account Created:** <t:${Math.floor(member.user.createdTimestamp / 1000)}:R>\n` +
-      `• **Fake Join:** ${isFake ? "⚠️ Yes (Account age < 24h)" : "No"}`
+      `> **User:** ${member.user.tag} (${member})\n` +
+      `> **ID:** \`${member.id}\`\n` +
+      `> **Invited By:** <@${inviterId}> (\`${inviterId}\`)\n` +
+      `> **Total Invites:** \`${totalInvites}\` net\n` +
+      `> **Invite Code:** \`${code}\` (Uses: \`${resolvedInvite.uses || 0}\`)\n` +
+      `> **Account Created:** <t:${Math.floor(member.user.createdTimestamp / 1000)}:R>\n` +
+      `> **Fake Join:** ${isFake ? "⚠️ Yes (Account age < 24h)" : "No"}`
     )
     .setTimestamp();
   await sendGuildLog(guild, "invites", embed);
@@ -204,11 +204,11 @@ export async function trackMemberLeave(member: GuildMember) {
       .setColor(0xe67e22)
       .setTitle("📤 Member Left (Invite Decremented)")
       .setDescription(
-        `• **User:** ${member.user.tag} (${member})\n` +
-        `• **ID:** \`${member.id}\`\n` +
-        `• **Inviter:** <@${inviterId}> (\`${inviterId}\`)\n` +
-        `• **Code:** \`${memberStats.inviteCode || "N/A"}\`\n` +
-        `• **Inviter Total net invites:** \`${totalInvites}\``
+        `> **User:** ${member.user.tag} (${member})\n` +
+        `> **ID:** \`${member.id}\`\n` +
+        `> **Inviter:** <@${inviterId}> (\`${inviterId}\`)\n` +
+        `> **Code:** \`${memberStats.inviteCode || "N/A"}\`\n` +
+        `> **Inviter Net Invites:** \`${totalInvites}\``
       )
       .setTimestamp();
     await sendGuildLog(guild, "invites", embed);
@@ -218,9 +218,9 @@ export async function trackMemberLeave(member: GuildMember) {
       .setColor(0xe74c3c)
       .setTitle("📤 Member Left")
       .setDescription(
-        `• **User:** ${member.user.tag} (${member})\n` +
-        `• **ID:** \`${member.id}\`\n` +
-        `• **Invite Type:** Direct / Vanity URL / Discovery`
+        `> **User:** ${member.user.tag} (${member})\n` +
+        `> **ID:** \`${member.id}\`\n` +
+        `> **Invite Type:** Direct / Vanity URL / Discovery`
       )
       .setTimestamp();
     await sendGuildLog(guild, "users", embed);

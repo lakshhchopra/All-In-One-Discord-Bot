@@ -8,7 +8,7 @@ export const profileCommand: Command = {
   category: "General Commands",
   usage: "profile [member]",
   examples: ["profile", "profile @member"],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const member = ctx.getMemberOption("member", 0) || ctx.member;
 
     const stats = await prisma.memberStats.findUnique({
@@ -32,3 +32,4 @@ export const profileCommand: Command = {
     return ctx.reply({ embeds: [embed] });
   }
 };
+

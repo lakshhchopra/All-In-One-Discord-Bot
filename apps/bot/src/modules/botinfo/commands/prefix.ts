@@ -1,6 +1,7 @@
 import { Command } from "../../../commands/command.js";
 import { prisma } from "../../../services/db.js";
 import { UniversalEmbed } from "../../../services/embed.js";
+import { CacheService } from "../../../services/cache.js";
 
 export const prefixCommand: Command = {
   name: "prefix",
@@ -13,7 +14,7 @@ export const prefixCommand: Command = {
     "prefix show",
     "prefix reset"
   ],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const action = ctx.getStringOption("action", 0)?.toLowerCase();
 
     if (action === "set" || action === "add") {
@@ -27,6 +28,8 @@ export const prefixCommand: Command = {
         update: { prefix: val },
         create: { guildId: ctx.guild.id, prefix: val }
       });
+
+      await CacheService.clearGuildConfig(ctx.guild.id);
 
       return ctx.reply({ embeds: [UniversalEmbed.success(`Server prefix updated to \`${val}\``, ctx.guild)] });
     }
@@ -49,3 +52,4 @@ export const prefixCommand: Command = {
     return ctx.reply({ embeds: [UniversalEmbed.info("Usage: `prefix [set|reset|add|show|remove] [value]`", ctx.guild)] });
   }
 };
+

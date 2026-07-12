@@ -8,9 +8,10 @@ export const listbughuntersCommand: Command = {
   category: "General Commands",
   usage: "listbughunters",
   examples: ["listbughunters"],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const embed = UniversalEmbed.neutral("Bug Hunters", ctx.guild)
       .setDescription("This user list filter requires OAuth2 indexing which is currently not syncable.");
     return ctx.reply({ embeds: [embed] });
   }
 };
+

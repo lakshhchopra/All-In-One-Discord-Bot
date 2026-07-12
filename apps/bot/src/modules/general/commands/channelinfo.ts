@@ -8,7 +8,7 @@ export const channelinfoCommand: Command = {
   category: "General Commands",
   usage: "channelinfo [channel]",
   examples: ["channelinfo", "channelinfo #general"],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const chOption = ctx.getChannelOption("channel", 0) || ctx.channel;
     const channel = ctx.guild.channels.cache.get((chOption as any).id);
 
@@ -38,3 +38,4 @@ export const channelinfoCommand: Command = {
     return ctx.reply({ embeds: [embed] });
   }
 };
+

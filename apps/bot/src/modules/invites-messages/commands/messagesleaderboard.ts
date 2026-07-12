@@ -11,7 +11,7 @@ export const messagesLeaderboardCommand: Command = {
   category: "Message Tracking",
   usage: "messagesleaderboard",
   examples: ["messagesleaderboard"],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     await ctx.reply("⏳ Generating message leaderboard card...");
 
     const topChatters = await prisma.memberStats.findMany({
@@ -45,3 +45,4 @@ export const messagesLeaderboardCommand: Command = {
     return ctx.reply({ embeds: [embed], files: [attachment] });
   }
 };
+

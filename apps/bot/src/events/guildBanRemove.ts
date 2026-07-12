@@ -13,12 +13,16 @@ export async function handleGuildBanRemove(ban: GuildBan): Promise<void> {
 
     const embed = new EmbedBuilder()
       .setColor(0x2ecc71)
+      .setAuthor({
+        name: ban.user.tag,
+        iconURL: ban.user.displayAvatarURL({ extension: "png" })
+      })
       .setTitle("🔓 Member Unbanned")
       .setDescription(
-        `• **User:** ${ban.user.tag} (${ban.user})\n` +
-        `• **ID:** \`${ban.user.id}\`\n` +
-        (executor ? `• **Unbanned By:** ${executor} (\`${executor.id}\`)` : `• **Unbanned By:** Unknown`)
+        `> **User:** ${ban.user} (\`${ban.user.id}\`)\n` +
+        (executor ? `> **Unbanned By:** ${executor} (\`${executor.id}\`)` : `> **Unbanned By:** Unknown`)
       )
+      .setFooter({ text: `User ID: ${ban.user.id}` })
       .setTimestamp();
     await sendGuildLog(guild, "moderation", embed);
   } catch (error) {

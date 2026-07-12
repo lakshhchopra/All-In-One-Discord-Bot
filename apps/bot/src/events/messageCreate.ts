@@ -1,5 +1,6 @@
 import { Message, ChannelType } from "discord.js";
 import { prisma } from "../services/db.js";
+import { CacheService } from "../services/cache.js";
 import { CommandContext } from "../commands/context.js";
 import { EMOJIS } from "../config/emojis.js";
 import { handleCommand, CommandRegistry } from "../commands/command.js";
@@ -14,18 +15,14 @@ export async function handleMessageCreate(message: Message) {
   const guildId = message.guild.id;
   const userId = message.author.id;
 
-  // 0. Ensure GuildConfig exists for this guild to satisfy foreign key constraints
-  await prisma.guildConfig.upsert({
-    where: { guildId },
-    update: {},
-    create: { guildId }
-  });
-
-  const guildConfig = await prisma.guildConfig.findUnique({ where: { guildId } });
+  // 0. Fetch only the most critical config (Read-Only to save write latency)
+  const guildConfig = await CacheService.getGuildConfig(guildId);
   const prefix = guildConfig?.prefix ?? "-";
 
-  // 1. Increment Member Message Statistics
-  await prisma.memberStats.upsert({
+
+
+  // 1. Increment Member Message Statistics (Fire and Forget)
+  prisma.memberStats.upsert({
     where: { guildId_userId: { guildId, userId } },
     update: {
       totalMessages: { increment: 1 },
@@ -41,24 +38,23 @@ export async function handleMessageCreate(message: Message) {
       weeklyMessages: 1,
       monthlyMessages: 1
     }
-  });
+  }).catch(() => null);
 
-  // 2. AFK check: If author returns, remove AFK
-  const authorStats = await prisma.memberStats.findUnique({
-    where: { guildId_userId: { guildId, userId } }
-  });
-  if (authorStats?.afkMessage) {
-    await prisma.memberStats.update({
-      where: { guildId_userId: { guildId, userId } },
-      data: { afkMessage: null, afkSince: null }
-    });
-    try {
-      if (message.member?.nickname?.startsWith("[AFK] ")) {
-        await message.member.setNickname(message.member.displayName.replace("[AFK] ", ""));
-      }
-    } catch {}
-    await message.reply({ embeds: [UniversalEmbed.success(`Welcome back ${message.author}! I have removed your AFK state.`, message.guild)] });
-  }
+  // 2. AFK check: If author returns, remove AFK asynchronously (Fire and Forget)
+  prisma.memberStats.findUnique({ where: { guildId_userId: { guildId, userId } } }).then(async (authorStats) => {
+    if (authorStats?.afkMessage) {
+      await prisma.memberStats.update({
+        where: { guildId_userId: { guildId, userId } },
+        data: { afkMessage: null, afkSince: null }
+      });
+      try {
+        if (message.member?.nickname?.startsWith("[AFK] ")) {
+          await message.member.setNickname(message.member.displayName.replace("[AFK] ", ""));
+        }
+      } catch {}
+      await (message.channel as any).send({ content: `<@${message.author.id}>`, embeds: [UniversalEmbed.success(`Welcome back ${message.author}! I have removed your AFK state.`, message.guild!)] }).catch(() => null);
+    }
+  }).catch(() => null);
 
   // AFK check: Mentions check
   if (message.mentions.members && message.mentions.members.size > 0) {
@@ -68,23 +64,25 @@ export async function handleMessageCreate(message: Message) {
         where: { guildId_userId: { guildId, userId: mentioned.id } }
       });
       if (stats?.afkMessage) {
-        await message.reply({
+        await (message.channel as any).send({
+          content: `<@${message.author.id}>`,
           embeds: [
             UniversalEmbed.info(
               `**${mentioned.user.username}** is AFK: ${stats.afkMessage} (<t:${Math.floor(stats.afkSince!.getTime() / 1000)}:R>)`,
               message.guild
             )
           ]
-        });
+        }).catch(() => null);
       }
     }
   }
 
   // 3. Counting Game Check
-  const countState = await prisma.countState.findUnique({ where: { guildId } });
-  if (countState && message.channel.id === countState.channelId) {
-    const val = parseInt(message.content, 10);
-    if (!isNaN(val)) {
+  // Only query countState if message is purely a number to save DB calls
+  const val = parseInt(message.content, 10);
+  if (!isNaN(val) && val.toString() === message.content.trim()) {
+    const countState = await prisma.countState.findUnique({ where: { guildId } });
+    if (countState && message.channel.id === countState.channelId) {
       const expected = countState.currentCount + 1;
 
       if (val !== expected || countState.lastUserId === userId) {
@@ -142,7 +140,40 @@ export async function handleMessageCreate(message: Message) {
     }
   }
 
-  // 4. Autoresponder check
+  // 4. Command Resolution (Do this BEFORE auto-responders to make commands lightning fast)
+  let hasPrefix = true;
+  let commandString = "";
+
+  if (message.content.startsWith(prefix)) {
+    commandString = message.content.slice(prefix.length);
+  } else {
+    // Check if user has no-prefix enabled in this guild
+    const isNoPrefix = await CacheService.getNoPrefix(guildId, message.author.id);
+
+    if (isNoPrefix) {
+      const tempArgs = message.content.trim().split(/ +/);
+      const tempCommandName = tempArgs[0]?.toLowerCase();
+      if (tempCommandName && CommandRegistry.get(tempCommandName)) {
+        commandString = message.content;
+        hasPrefix = false;
+      }
+    }
+  }
+
+  // If it's a command, execute it immediately and skip all chat-based DB queries (autoresponders, etc)
+  if (commandString) {
+    const args = commandString.trim().split(/ +/);
+    const commandName = args.shift()?.toLowerCase();
+    if (commandName) {
+      const ctx = new CommandContext(message, args);
+      ctx.prefix = hasPrefix ? prefix : "";
+      ctx.commandName = commandName;
+      await handleCommand(ctx, commandName);
+      return; // Stop execution, it was a command
+    }
+  }
+
+  // 5. Autoresponder check (Only runs if it wasn't a command)
   const responders = await prisma.autoResponder.findMany({ where: { guildId } });
   for (const ar of responders) {
     let triggered = false;
@@ -181,84 +212,47 @@ export async function handleMessageCreate(message: Message) {
     }
   }
 
-  // 5. Command prefix resolver
-  let hasPrefix = true;
-  let commandString = "";
-
-  if (message.content.startsWith(prefix)) {
-    commandString = message.content.slice(prefix.length);
-  } else {
-    // Check if user has no-prefix enabled in this guild
-    const isNoPrefix = await prisma.whitelist.findUnique({
-      where: { guildId_targetId: { guildId, targetId: message.author.id } }
-    }).then(w => w?.type === "noprefix").catch(() => false);
-
-    if (isNoPrefix) {
-      const tempArgs = message.content.trim().split(/ +/);
-      const tempCommandName = tempArgs[0]?.toLowerCase();
-      if (tempCommandName && CommandRegistry.get(tempCommandName)) {
-        commandString = message.content;
-        hasPrefix = false;
+  // 6. AutoReact (Runs for normal chat)
+  try {
+    const autoReacts = await prisma.autoReact.findMany({ where: { guildId } });
+    const lowerContent = message.content.toLowerCase();
+    for (const ar of autoReacts) {
+      if (lowerContent.includes(ar.trigger)) {
+        for (const emoji of ar.emojis) {
+          await message.react(emoji).catch(() => null);
+        }
       }
     }
-  }
+  } catch {}
 
-  if (hasPrefix && !message.content.startsWith(prefix)) {
-    // AutoReact
-    try {
-      const autoReacts = await prisma.autoReact.findMany({ where: { guildId } });
-      const lowerContent = message.content.toLowerCase();
-      for (const ar of autoReacts) {
-        if (lowerContent.includes(ar.trigger)) {
-          for (const emoji of ar.emojis) {
-            await message.react(emoji).catch(() => null);
-          }
+  // 7. Sticky Message (Runs for normal chat)
+  try {
+    const sticky = await prisma.stickyMessage.findUnique({
+      where: { channelId: message.channel.id }
+    });
+
+    if (sticky) {
+      // Avoid infinite loop by ignoring bot's own sticky posts
+      if (message.author.id !== message.client.user?.id) {
+        if (sticky.lastMessageId) {
+          try {
+            const oldMsg = await message.channel.messages.fetch(sticky.lastMessageId);
+            await oldMsg.delete();
+          } catch {}
         }
+
+        const sent = await (message.channel as any).send({
+          embeds: [
+            new UniversalEmbed("neutral", undefined, message.guild!)
+              .setDescription(`📌 **Sticky Message**\n\n${sticky.message}`)
+          ]
+        });
+
+        await prisma.stickyMessage.update({
+          where: { channelId: message.channel.id },
+          data: { lastMessageId: sent.id }
+        });
       }
-    } catch {}
-
-    // Sticky Message
-    try {
-      const sticky = await prisma.stickyMessage.findUnique({
-        where: { channelId: message.channel.id }
-      });
-
-      if (sticky) {
-        // Avoid infinite loop by ignoring bot's own sticky posts
-        if (message.author.id !== message.client.user?.id) {
-          if (sticky.lastMessageId) {
-            try {
-              const oldMsg = await message.channel.messages.fetch(sticky.lastMessageId);
-              await oldMsg.delete();
-            } catch {}
-          }
-
-          const sent = await (message.channel as any).send({
-            embeds: [
-              new UniversalEmbed("neutral", undefined, message.guild!)
-                .setDescription(`📌 **Sticky Message**\n\n${sticky.message}`)
-            ]
-          });
-
-          await prisma.stickyMessage.update({
-            where: { channelId: message.channel.id },
-            data: { lastMessageId: sent.id }
-          });
-        }
-      }
-    } catch {}
-
-    return;
-  }
-
-  if (!commandString) return;
-  const args = commandString.trim().split(/ +/);
-  const commandName = args.shift()?.toLowerCase();
-  if (!commandName) return;
-
-  const ctx = new CommandContext(message, args);
-  ctx.prefix = hasPrefix ? prefix : "";
-  ctx.commandName = commandName;
-
-  await handleCommand(ctx, commandName);
+    }
+  } catch {}
 }

@@ -1,5 +1,6 @@
 import { GuildMember, PermissionFlagsBits } from "discord.js";
 import { prisma } from "../services/db.js";
+import { CacheService } from "../services/cache.js";
 
 export type PermissionLevel = "EVERYONE" | "MODERATOR" | "ADMIN" | "EXTRA_OWNER" | "OWNER";
 
@@ -24,16 +25,10 @@ export async function getPermissionLevel(member: GuildMember): Promise<Permissio
     return "OWNER";
   }
 
-  // 3. Extra Owners check (from database)
-  const extraOwner = await prisma.extraOwner.findUnique({
-    where: {
-      guildId_userId: {
-        guildId: member.guild.id,
-        userId: member.id
-      }
-    }
-  });
-  if (extraOwner) {
+  // 3. Extra Owners check (from database via cache)
+  const isExtraOwner = await CacheService.getExtraOwner(member.guild.id, member.id);
+  
+  if (isExtraOwner) {
     return "EXTRA_OWNER";
   }
 

@@ -17,7 +17,7 @@ export const logCommand: Command = {
     "logging config",
     "logging info"
   ],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const action = ctx.getStringOption("action", 0)?.toLowerCase();
 
     if (!action) {
@@ -137,3 +137,4 @@ export const logCommand: Command = {
     return ctx.reply({ embeds: [UniversalEmbed.error(`Unknown option or category \`${action}\`. Type \`logging\` for options.`, ctx.guild)] }, 5);
   }
 };
+

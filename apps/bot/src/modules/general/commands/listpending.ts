@@ -8,7 +8,7 @@ export const listpendingCommand: Command = {
   category: "General Commands",
   usage: "listpending",
   examples: ["listpending"],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const pending = ctx.guild.members.cache.filter(m => m.pending);
     const description = pending.map(m => `• **${m.user.tag}** (${m.id})`).slice(0, 30).join("\n") || "No pending members.";
 
@@ -18,3 +18,4 @@ export const listpendingCommand: Command = {
     return ctx.reply({ embeds: [embed] });
   }
 };
+

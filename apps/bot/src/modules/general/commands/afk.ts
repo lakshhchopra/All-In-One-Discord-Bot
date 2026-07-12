@@ -8,7 +8,7 @@ export const afkCommand: Command = {
   category: "Information",
   usage: "afk [message]",
   examples: ["afk studying", "afk"],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const reason = ctx.args.join(" ") || "AFK";
 
     await prisma.memberStats.upsert({
@@ -26,3 +26,4 @@ export const afkCommand: Command = {
     return ctx.reply({ embeds: [UniversalEmbed.success(`Successfully set your AFK: ${reason}`, ctx.guild)] });
   }
 };
+

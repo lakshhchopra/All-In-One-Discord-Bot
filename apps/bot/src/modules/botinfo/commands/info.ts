@@ -7,7 +7,7 @@ export const infoCommand: Command = {
   description: "Displays bot statistics, ping status, developer details, or status.",
   category: "Bot Info",
   aliases: ["ping", "status", "botinfo", "aboutdev"],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const cmd = ctx.commandName.toLowerCase();
 
     if (cmd === "ping") {
@@ -55,3 +55,4 @@ export const infoCommand: Command = {
     }
   }
 };
+

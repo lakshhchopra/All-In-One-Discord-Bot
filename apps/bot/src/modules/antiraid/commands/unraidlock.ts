@@ -10,7 +10,7 @@ export const unraidlockCommand: Command = {
   permissionLevel: "ADMIN",
   usage: "unraidlock",
   examples: ["unraidlock"],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const textChannels = ctx.guild.channels.cache.filter(c => c.isTextBased() && !c.isDMBased());
     for (const [_, ch] of textChannels) {
       try {
@@ -27,3 +27,4 @@ export const unraidlockCommand: Command = {
     return ctx.reply({ embeds: [UniversalEmbed.success("✅ Server unlocked. Everyone can send messages again.", ctx.guild)] });
   }
 };
+

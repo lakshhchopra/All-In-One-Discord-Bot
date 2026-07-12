@@ -16,7 +16,7 @@ export const gcreateCommand: Command = {
     "gcreate #giveaways 30m 3 Discord Nitro",
     "gcreate #giveaways 2d 1 Steam Gift Card"
   ],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const channel = ctx.getChannelOption("channel", 0) as TextChannel;
     const durationStr = ctx.getStringOption("duration", 1);
     const winnerCount = ctx.getIntegerOption("winners", 2) ?? 1;
@@ -74,3 +74,4 @@ export const gcreateCommand: Command = {
     });
   }
 };
+

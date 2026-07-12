@@ -406,7 +406,7 @@ export const shipCommand: Command = {
     .addUserOption(option => 
       option.setName("user2").setDescription("The second user").setRequired(false)
     ) as any,
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     // 1. Fetch all members to populate cache (including offline, bots, etc.)
     await ctx.guild.members.fetch().catch(() => null);
 
@@ -555,3 +555,4 @@ export const shipCommand: Command = {
     await runShipFlow(currentMode, target2);
   }
 };
+

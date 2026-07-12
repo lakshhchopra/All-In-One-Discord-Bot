@@ -3,6 +3,7 @@ import { infoCommand } from "./commands/info.js";
 import { prefixCommand } from "./commands/prefix.js";
 import { noprefixCommand } from "./commands/noprefix.js";
 import { configCommand } from "./commands/config.js";
+import { uptimeCommand } from "./commands/uptime.js";
 import {
   helpCommand,
   getHomeEmbed,
@@ -20,6 +21,7 @@ export {
   prefixCommand,
   noprefixCommand,
   configCommand,
+  uptimeCommand,
   helpCommand,
   getHomeEmbed,
   getHelpComponents,
@@ -36,5 +38,6 @@ export function registerBotInfo() {
   CommandRegistry.register(prefixCommand);
   CommandRegistry.register(noprefixCommand);
   CommandRegistry.register(configCommand);
+  CommandRegistry.register(uptimeCommand);
   CommandRegistry.register(helpCommand);
 }

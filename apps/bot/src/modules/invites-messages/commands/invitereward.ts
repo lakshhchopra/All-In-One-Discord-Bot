@@ -13,7 +13,7 @@ export const inviteRewardCommand: Command = {
     "invitereward remove 5",
     "invitereward list"
   ],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const action = ctx.getStringOption("action", 0)?.toLowerCase();
 
     if (action === "add") {
@@ -54,3 +54,4 @@ export const inviteRewardCommand: Command = {
     return ctx.reply({ embeds: [UniversalEmbed.info("Invite Role Rewards List", ctx.guild).setDescription(rewardDesc)] });
   }
 };
+

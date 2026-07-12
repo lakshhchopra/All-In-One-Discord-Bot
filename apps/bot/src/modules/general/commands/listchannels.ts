@@ -8,7 +8,7 @@ export const listchannelsCommand: Command = {
   category: "General Commands",
   usage: "listchannels",
   examples: ["listchannels"],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const channels = ctx.guild.channels.cache.map(c => `• **${c.name}** (${c.id}) - <#${c.id}>`).slice(0, 25).join("\n") +
       (ctx.guild.channels.cache.size > 25 ? "\n... and more" : "");
 
@@ -19,3 +19,4 @@ export const listchannelsCommand: Command = {
     return ctx.reply({ embeds: [embed] });
   }
 };
+

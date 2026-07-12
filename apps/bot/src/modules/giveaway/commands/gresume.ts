@@ -15,7 +15,7 @@ export const gresumeCommand: Command = {
   permissionLevel: "MODERATOR",
   usage: "gresume <messageId>",
   examples: ["gresume 1135816865055256688"],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const messageId = ctx.getStringOption("messageId", 0);
     if (!messageId) return ctx.reply({ embeds: [UniversalEmbed.error("Usage: `gresume <messageId>`", ctx.guild)] }, 5);
 
@@ -65,3 +65,4 @@ export const gresumeCommand: Command = {
     return ctx.reply({ embeds: [UniversalEmbed.success("Giveaway resumed successfully.", ctx.guild)] });
   }
 };
+

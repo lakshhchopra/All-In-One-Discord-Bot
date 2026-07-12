@@ -31,10 +31,13 @@ import { registerSecurity } from "./modules/security/commands.js";
 import { registerAntiRaid } from "./modules/antiraid/commands.js";
 import { registerInvitesMessages } from "./modules/invites-messages/commands.js";
 import { registerGiveaway } from "./modules/giveaway/commands.js";
+import { setupMusicPlayer, resume247Sessions } from "./services/music.js";
 import { registerGames } from "./modules/games/commands.js";
 import { registerGeneral } from "./modules/general/commands.js";
 import { registerBotInfo } from "./modules/botinfo/commands.js";
+import { registerMusic } from "./modules/music/commands.js";
 import { registerTickets } from "./modules/tickets/commands.js";
+import { registerDeveloper } from "./modules/developer/commands.js";
 import { startGiveawayScheduler } from "./modules/giveaway/scheduler.js";
 
 // Gupshup - The Ultimate All-In-One Discord Bot
@@ -53,6 +56,7 @@ const client = new Client({
 });
 
 // Register Commands across all modules
+registerDeveloper();
 registerWelcome();
 registerModeration();
 registerTempVc();
@@ -66,6 +70,7 @@ registerGiveaway();
 registerGames();
 registerGeneral();
 registerBotInfo();
+registerMusic();
 registerTickets();
 
 function updateBotPresence(readyClient: any) {
@@ -91,7 +96,11 @@ function updateBotPresence(readyClient: any) {
 }
 
 client.once(Events.ClientReady, async (readyClient) => {
-  console.log(`🤖 Discord Bot logged in as ${readyClient.user.tag}`);
+  // Initialize music player
+  await setupMusicPlayer(client);
+  await resume247Sessions(client);
+
+  console.log(`🤖 Discord Bot logged in as ${client.user?.tag}`);
 
   // Load application emojis dynamically from the developer portal
   await loadApplicationEmojis(readyClient);

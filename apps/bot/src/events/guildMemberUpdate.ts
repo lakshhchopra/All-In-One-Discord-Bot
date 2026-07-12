@@ -39,10 +39,10 @@ export async function handleGuildMemberUpdate(oldMember: GuildMember, newMember:
         .setColor(0x3498db)
         .setTitle("✏️ Member Nickname Changed")
         .setDescription(
-          `• **Member:** ${newMember} (${newMember.user.tag})\n` +
-          `• **ID:** \`${newMember.id}\`\n` +
-          `• **Before:** ${oldMember.nickname || "*None*"}\n` +
-          `• **After:** ${newMember.nickname || "*None*"}`
+          `> **Member:** ${newMember} (${newMember.user.tag})\n` +
+          `> **ID:** \`${newMember.id}\`\n` +
+          `> **Before:** ${oldMember.nickname || "*None*"}\n` +
+          `> **After:** ${newMember.nickname || "*None*"}`
         )
         .setTimestamp();
       await sendGuildLog(guild, "users", embed);
@@ -65,9 +65,9 @@ export async function handleGuildMemberUpdate(oldMember: GuildMember, newMember:
           .setColor(0x2ecc71)
           .setTitle("🛡️ Member Roles Added")
           .setDescription(
-            `• **Member:** ${newMember} (${newMember.user.tag})\n` +
-            `• **ID:** \`${newMember.id}\`\n` +
-            `• **Added Role(s):** ${addedRoles.map(r => `<@&${r.id}>`).join(", ")}`
+            `> **Member:** ${newMember} (${newMember.user.tag})\n` +
+            `> **ID:** \`${newMember.id}\`\n` +
+            `> **Added Role(s):** ${addedRoles.map(r => `<@&${r.id}>`).join(", ")}`
           )
           .setTimestamp();
         await sendGuildLog(guild, "users", embed);
@@ -78,9 +78,9 @@ export async function handleGuildMemberUpdate(oldMember: GuildMember, newMember:
           .setColor(0xe74c3c)
           .setTitle("🛡️ Member Roles Removed")
           .setDescription(
-            `• **Member:** ${newMember} (${newMember.user.tag})\n` +
-            `• **ID:** \`${newMember.id}\`\n` +
-            `• **Removed Role(s):** ${removedRoles.map(r => `<@&${r.id}>`).join(", ")}`
+            `> **Member:** ${newMember} (${newMember.user.tag})\n` +
+            `> **ID:** \`${newMember.id}\`\n` +
+            `> **Removed Role(s):** ${removedRoles.map(r => `<@&${r.id}>`).join(", ")}`
           )
           .setTimestamp();
         await sendGuildLog(guild, "users", embed);

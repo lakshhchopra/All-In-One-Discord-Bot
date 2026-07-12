@@ -14,7 +14,7 @@ export const messageCommand: Command = {
     "message add @user 100",
     "message reset @user"
   ],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const action = ctx.getStringOption("action", 0)?.toLowerCase();
     const cmd = ctx.commandName.toLowerCase();
 
@@ -102,3 +102,4 @@ export const messageCommand: Command = {
     }
   }
 };
+

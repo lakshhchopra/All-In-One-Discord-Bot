@@ -24,13 +24,9 @@ export async function handleGuildBanAdd(ban: GuildBan): Promise<void> {
       const whitelisted = await isWhitelisted(guild, executor.id, "ban");
       if (!whitelisted) {
         isRogue = true;
-        // rogue executor detected! Revert and punish:
-        // A. Unban victim
         await guild.members.unban(ban.user, "Antinuke Protection: Unauthorized Ban Reverted").catch(() => null);
-        // B. Ban executor
         await guild.members.ban(executor.id, { reason: "Antinuke Protection: Unauthorized ban action" }).catch(() => null);
 
-        // C. Save audit log
         await prisma.auditLog.create({
           data: {
             guildId: guild.id,
@@ -41,15 +37,14 @@ export async function handleGuildBanAdd(ban: GuildBan): Promise<void> {
           }
         });
 
-        // D. Send global logs
         const logEmbed = new EmbedBuilder()
           .setColor(0xFF0000)
           .setTitle("🛡️ Anti-Nuke: Rogue Ban Blocked")
           .setDescription(
-            `- **Server:** ${guild.name} (${guild.id})\n` +
-            `- **Rogue Mod:** ${executor.tag} (${executor.id}) -> **BANNED**\n` +
-            `- **Victim:** ${ban.user.tag} (${ban.user.id}) -> **UNBANNED**\n` +
-            `- **Reason:** Direct unauthorized ban.`
+            `> **Server:** ${guild.name} (\`${guild.id}\`)\n` +
+            `> **Rogue Mod:** ${executor.tag} (\`${executor.id}\`) → **BANNED**\n` +
+            `> **Victim:** ${ban.user.tag} (\`${ban.user.id}\`) → **UNBANNED**\n` +
+            `> **Reason:** Unauthorized ban detected and reverted.`
           )
           .setTimestamp();
 
@@ -58,16 +53,19 @@ export async function handleGuildBanAdd(ban: GuildBan): Promise<void> {
     }
 
     if (!isRogue) {
-      // Normal Activity Log
       const embed = new EmbedBuilder()
         .setColor(0xe74c3c)
+        .setAuthor({
+          name: ban.user.tag,
+          iconURL: ban.user.displayAvatarURL({ extension: "png" })
+        })
         .setTitle("🔨 Member Banned")
         .setDescription(
-          `• **User:** ${ban.user.tag} (${ban.user})\n` +
-          `• **ID:** \`${ban.user.id}\`\n` +
-          `• **Reason:** ${ban.reason || "*No reason specified*"}\n` +
-          (executor ? `• **Banned By:** ${executor} (\`${executor.id}\`)` : `• **Banned By:** Unknown`)
+          `> **User:** ${ban.user} (\`${ban.user.id}\`)\n` +
+          `> **Reason:** ${ban.reason || "*No reason specified*"}\n` +
+          (executor ? `> **Banned By:** ${executor} (\`${executor.id}\`)` : `> **Banned By:** Unknown`)
         )
+        .setFooter({ text: `User ID: ${ban.user.id}` })
         .setTimestamp();
       await sendGuildLog(guild, "moderation", embed);
     }

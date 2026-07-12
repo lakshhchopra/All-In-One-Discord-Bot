@@ -8,7 +8,7 @@ export const listusersCommand: Command = {
   category: "General Commands",
   usage: "listusers",
   examples: ["listusers"],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const members = [...ctx.guild.members.cache.values()].slice(0, 30);
     const description = members.map(m => `• **${m.user.tag}** (${m.id})`).join("\n") +
       (ctx.guild.members.cache.size > 30 ? "\n... and more" : "");
@@ -20,3 +20,4 @@ export const listusersCommand: Command = {
     return ctx.reply({ embeds: [embed] });
   }
 };
+

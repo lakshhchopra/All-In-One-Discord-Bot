@@ -8,7 +8,7 @@ export const listjoinedatCommand: Command = {
   category: "General Commands",
   usage: "listjoinedat",
   examples: ["listjoinedat"],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const sorted = [...ctx.guild.members.cache.values()]
       .sort((a, b) => (a.joinedTimestamp || 0) - (b.joinedTimestamp || 0))
       .slice(0, 15);
@@ -23,3 +23,4 @@ export const listjoinedatCommand: Command = {
     return ctx.reply({ embeds: [embed] });
   }
 };
+

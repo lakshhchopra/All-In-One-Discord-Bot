@@ -8,7 +8,7 @@ export const listbotsCommand: Command = {
   category: "General Commands",
   usage: "listbots",
   examples: ["listbots"],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const bots = ctx.guild.members.cache.filter(m => m.user.bot);
     const description = bots.map(m => `• **${m.user.tag}** (${m.id})`).slice(0, 30).join("\n") || "No bots in this server.";
 
@@ -19,3 +19,4 @@ export const listbotsCommand: Command = {
     return ctx.reply({ embeds: [embed] });
   }
 };
+

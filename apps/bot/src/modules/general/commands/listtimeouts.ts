@@ -8,7 +8,7 @@ export const listtimeoutsCommand: Command = {
   category: "General Commands",
   usage: "listtimeouts",
   examples: ["listtimeouts"],
-  execute: async (ctx) => {
+  execute: async (ctx: any) => {
     const timeouts = ctx.guild.members.cache.filter(
       m => m.communicationDisabledUntilTimestamp !== null && m.communicationDisabledUntilTimestamp > Date.now()
     );
@@ -23,3 +23,4 @@ export const listtimeoutsCommand: Command = {
     return ctx.reply({ embeds: [embed] });
   }
 };
+
