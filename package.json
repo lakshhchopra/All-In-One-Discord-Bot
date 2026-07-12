@@ -1,18 +1,21 @@
 {
-  "name": "all-in-one-discord-bot",
+  "name": "gupshup-monorepo",
   "version": "1.0.0",
-  "description": "Enterprise-Grade Modular Discord Management Bot & Dashboard",
-  "main": "dist/index.js",
-  "type": "module",
+  "description": "Gupshup Discord Bot & Dashboard — Monorepo",
+  "private": true,
+  "workspaces": [
+    "apps/bot",
+    "apps/dashboard"
+  ],
   "scripts": {
-    "dev:bot": "tsx watch src/index.ts",
-    "build:bot": "tsc",
-    "start:bot": "node dist/index.js",
-    "dev:dashboard": "npm run dev --prefix dashboard",
-    "build:dashboard": "npm run build --prefix dashboard",
-    "start:dashboard": "npm run start --prefix dashboard",
-    "lint": "eslint src/**/*.ts",
-    "format": "prettier --write \"src/**/*.ts\" \"dashboard/src/**/*.{ts,tsx}\"",
+    "dev:bot": "tsx watch apps/bot/src/index.ts",
+    "dev:dashboard": "npm run dev --prefix apps/dashboard",
+    "build:bot": "tsc -p apps/bot/tsconfig.json",
+    "build:dashboard": "npm run build --prefix apps/dashboard",
+    "start:bot": "node apps/bot/dist/index.js",
+    "start:dashboard": "npm run start --prefix apps/dashboard",
+    "lint": "eslint apps/bot/src/**/*.ts",
+    "format": "prettier --write \"apps/bot/src/**/*.ts\" \"apps/dashboard/src/**/*.{ts,tsx}\"",
     "postinstall": "prisma generate"
   },
   "dependencies": {

@@ -1,0 +1,29 @@
+{
+  "name": "@gupshup/bot",
+  "version": "1.0.0",
+  "description": "Gupshup Discord Bot",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "npm run build && node dist/index.js",
+    "start:dev": "tsx src/index.ts",
+    "postinstall": "prisma generate --schema=./prisma/schema.prisma"
+  },
+  "dependencies": {
+    "@napi-rs/canvas": "^0.1.53",
+    "@prisma/client": "^5.16.0",
+    "bullmq": "^5.8.5",
+    "discord.js": "^14.15.3",
+    "dotenv": "^16.4.5",
+    "ioredis": "^5.4.1",
+    "prisma": "^5.16.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.9",
+    "tsx": "^4.16.0",
+    "typescript": "^5.5.2"
+  }
+}
