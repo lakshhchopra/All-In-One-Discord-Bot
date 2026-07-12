@@ -75,8 +75,8 @@ export async function endGiveaway(
     } else {
       await ch.send(`⚠️ The giveaway for **${giveaway.prize}** ended with no entries.`);
     }
-  } catch (err) {
-    console.error("[Giveaway] Failed to end giveaway:", giveawayId, err);
+  } catch (err: any) {
+    console.error("[Giveaway] Failed to end giveaway:", giveawayId, err.message || err);
   }
 
   return winners;
@@ -101,8 +101,8 @@ export function startGiveawayScheduler(client: Client): void {
       for (const g of expired) {
         await endGiveaway(g.id, client);
       }
-    } catch (err) {
-      console.error("[Giveaway] Scheduler error:", err);
+    } catch (err: any) {
+      console.error("[Giveaway] Scheduler error:", err.message || err);
     }
   };
 
