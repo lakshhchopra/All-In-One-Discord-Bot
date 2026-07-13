@@ -2,7 +2,7 @@ import { EmbedBuilder } from "discord.js";
 import { sendGuildLog } from "../services/logger.js";
 
 export async function handleMessageDelete(message: any): Promise<void> {
-  if (!message.guild || message.author?.bot) return;
+  if (!message.guild || !message.author || message.author.bot) return;
 
   const embed = new EmbedBuilder()
     .setColor(0xe74c3c)

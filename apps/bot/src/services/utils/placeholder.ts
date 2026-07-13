@@ -101,10 +101,10 @@ export async function parseFunctions(text: string, guildId: string, ctx?: Parser
   }
 
   // 5. Check {delete_reply:seconds}
-  const deleteReplyMatch = content.match(/{delete_reply:(\d+)}/i);
+  const deleteReplyMatch = content.match(/{delete_reply:(\d+)[s]?}/i);
   if (deleteReplyMatch) {
     deleteReplyAfter = parseInt(deleteReplyMatch[1], 10);
-    content = content.replace(/{delete_reply:\d+}/gi, "");
+    content = content.replace(/{delete_reply:\d+[s]?}/gi, "");
   }
 
   // 6. Check for {embed:name}
