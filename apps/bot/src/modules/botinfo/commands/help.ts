@@ -163,7 +163,7 @@ export const CATEGORY_DETAILS: Record<string, string> = {
 
   mini_games:
     `> **Counting**\n` +
-    `\`setup count channel\`, \`lb count\`, \`count\`\n\n` +
+    `\`counting channel\`, \`lb count\`, \`count\`\n\n` +
     `> **Ship**\n` +
     `\`ship\`, \`ship random\`, \`hate\`, \`love\`, \`friendship\``,
 
