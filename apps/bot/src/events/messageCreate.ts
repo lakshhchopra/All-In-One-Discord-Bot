@@ -97,23 +97,25 @@ export async function handleMessageCreate(message: Message) {
       } else {
         // Correct count
         const newHighScore = expected > countState.highScore ? expected : countState.highScore;
-        await prisma.countState.update({
+        
+        // React immediately for fast response
+        const successEmojiId = EMOJIS.success.match(/:(\d+)>/)?.[1];
+        const reactPromise = successEmojiId 
+          ? message.react(successEmojiId).catch(() => message.react("✅").catch(() => null))
+          : message.react("✅").catch(() => null);
+
+        // Update DB in background concurrently
+        const updateDb = prisma.countState.update({
           where: { guildId },
           data: { currentCount: expected, lastUserId: userId, highScore: newHighScore }
         });
-        await prisma.countingStats.upsert({
+        const updateStats = prisma.countingStats.upsert({
           where: { guildId_userId: { guildId, userId } },
           update: { score: { increment: 1 } },
           create: { guildId, userId, score: 1 }
         });
-        
-        // React with success emoji if accessible, else checkmark
-        const successEmojiId = EMOJIS.success.match(/:(\d+)>/)?.[1];
-        if (successEmojiId) {
-          await message.react(successEmojiId).catch(() => message.react("✅").catch(() => null));
-        } else {
-          await message.react("✅").catch(() => null);
-        }
+
+        await Promise.all([reactPromise, updateDb, updateStats]).catch(() => null);
       }
       return; // Don't allow command processing for number messages in counting channel
     }

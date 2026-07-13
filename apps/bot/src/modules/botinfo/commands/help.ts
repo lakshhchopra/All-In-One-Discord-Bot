@@ -165,7 +165,7 @@ export const CATEGORY_DETAILS: Record<string, string> = {
     `> **Counting**\n` +
     `\`counting channel\`, \`lb count\`, \`count\`\n\n` +
     `> **Ship**\n` +
-    `\`ship\`, \`ship random\`, \`hate\`, \`love\`, \`friendship\``,
+    `\`ship\`, \`match\`, \`ship random\`, \`hate\`, \`love\`, \`friendship\``,
 
   music:
     `> **Music Commands**\n` +

@@ -392,7 +392,7 @@ function getComponents(mode: "love" | "hate" | "friendship", isSelectingUser: bo
 }
 
 export const shipCommand: Command = {
-  name: "ship",
+  name: "ship", 
   description: "Calculate compatibility (Love, Hate, or Friendship) between users with interactive buttons and canvas.",
   category: "Games",
   usage: "ship [user1] [user2]",
