@@ -32,8 +32,10 @@ export const COMMAND_USAGES: Record<string, string> = {
   gparticipants: "gparticipants <messageId>",
   logging: "logging <enable | disable | setctchannel>",
   count: "count [member]",
+  counting: "counting <channel | show | reset> [#channel]",
   lb: "lb <count | messages | invites | dailymessage>",
   ship: "ship <@user1> [@user2]",
+  match: "match <@user1> [@user2]",
   afk: "afk [message]",
   membercount: "membercount",
   boostcount: "boostcount",
@@ -504,7 +506,14 @@ export const helpCommand: Command = {
         }
       }
 
-      const command = CommandRegistry.get(query);
+      let command = CommandRegistry.get(query);
+      
+      // Fallback for subcommands: if "query" is "counting channel", find base command "counting"
+      if (!command && query.includes(" ")) {
+        const baseQuery = query.split(" ")[0];
+        command = CommandRegistry.get(baseQuery);
+      }
+
       if (command) {
         const moduleKey = getCommandModule(command.category);
         const emoji = EMOJIS[moduleKey as keyof typeof EMOJIS] || EMOJIS.settings;
