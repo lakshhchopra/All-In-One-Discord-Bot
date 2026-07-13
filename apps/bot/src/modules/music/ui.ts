@@ -9,8 +9,7 @@ export function buildNowPlayingPayload(queue: GuildQueue, track: Track) {
     .setDescription(`**[${track.title}](${track.url})**\n*by ${track.author}*`)
     .addFields(
       { name: "Duration", value: `\`${track.duration}\``, inline: true },
-      { name: "Requested by", value: track.requestedBy ? track.requestedBy.toString() : "Unknown", inline: true },
-      { name: "\u200b", value: "▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", inline: false }
+      { name: "Requested by", value: track.requestedBy ? track.requestedBy.toString() : "Unknown", inline: true }
     );
     
   // Instead of a massive image or tiny thumbnail, we leave it clean. 
