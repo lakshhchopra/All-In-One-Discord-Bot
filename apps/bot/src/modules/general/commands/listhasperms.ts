@@ -16,8 +16,8 @@ export const listhaspermsCommand: Command = {
     }
 
     const flag = (PermissionFlagsBits as any)[permName];
-    const members = ctx.guild.members.cache.filter(m => m.permissions.has(flag) && !m.user.bot);
-    const description = members.map(m => `• **${m.user.tag}**`).slice(0, 30).join("\n") || "No members have this permission.";
+    const members = ctx.guild.members.cache.filter((m: any) => m.permissions.has(flag) && !m.user.bot);
+    const description = members.map((m: any) => `• **${m.user.tag}**`).slice(0, 30).join("\n") || "No members have this permission.";
 
     const embed = UniversalEmbed.neutral(`Members with ${permName}`, ctx.guild)
       .setDescription(description)

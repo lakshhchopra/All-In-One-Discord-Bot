@@ -9,7 +9,7 @@ export const listemojisCommand: Command = {
   usage: "listemojis",
   examples: ["listemojis"],
   execute: async (ctx: any) => {
-    const emojis = ctx.guild.emojis.cache.map(e => `${e} | \`:${e.name}:\` (${e.id})`).slice(0, 20).join("\n") +
+    const emojis = ctx.guild.emojis.cache.map((e: any) => `${e} | \`:${e.name}:\` (${e.id})`).slice(0, 20).join("\n") +
       (ctx.guild.emojis.cache.size > 20 ? "\n... and more" : "");
 
     const embed = UniversalEmbed.neutral("Server Emojis", ctx.guild)

@@ -9,8 +9,8 @@ export const listpendingCommand: Command = {
   usage: "listpending",
   examples: ["listpending"],
   execute: async (ctx: any) => {
-    const pending = ctx.guild.members.cache.filter(m => m.pending);
-    const description = pending.map(m => `• **${m.user.tag}** (${m.id})`).slice(0, 30).join("\n") || "No pending members.";
+    const pending = ctx.guild.members.cache.filter((m: any) => m.pending);
+    const description = pending.map((m: any) => `• **${m.user.tag}** (${m.id})`).slice(0, 30).join("\n") || "No pending members.";
 
     const embed = UniversalEmbed.neutral("Pending Members", ctx.guild)
       .setDescription(description);

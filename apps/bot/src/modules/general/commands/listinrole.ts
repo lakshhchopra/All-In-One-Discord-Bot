@@ -14,8 +14,8 @@ export const listinroleCommand: Command = {
       return ctx.reply({ embeds: [UniversalEmbed.error("Please specify a role to list members of.", ctx.guild)] }, 5);
     }
 
-    const members = ctx.guild.members.cache.filter(m => m.roles.cache.has(role.id));
-    const description = members.map(m => `• **${m.user.tag}** (${m.id})`).slice(0, 30).join("\n") || "No members have this role.";
+    const members = ctx.guild.members.cache.filter((m: any) => m.roles.cache.has(role.id));
+    const description = members.map((m: any) => `• **${m.user.tag}** (${m.id})`).slice(0, 30).join("\n") || "No members have this role.";
 
     const embed = UniversalEmbed.neutral(`Members in role: ${role.name}`, ctx.guild)
       .setDescription(description)

@@ -9,8 +9,8 @@ export const listbotsCommand: Command = {
   usage: "listbots",
   examples: ["listbots"],
   execute: async (ctx: any) => {
-    const bots = ctx.guild.members.cache.filter(m => m.user.bot);
-    const description = bots.map(m => `• **${m.user.tag}** (${m.id})`).slice(0, 30).join("\n") || "No bots in this server.";
+    const bots = ctx.guild.members.cache.filter((m: any) => m.user.bot);
+    const description = bots.map((m: any) => `• **${m.user.tag}** (${m.id})`).slice(0, 30).join("\n") || "No bots in this server.";
 
     const embed = UniversalEmbed.neutral("Bots List", ctx.guild)
       .setDescription(description)

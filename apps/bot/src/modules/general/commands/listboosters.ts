@@ -9,9 +9,9 @@ export const listboostersCommand: Command = {
   usage: "listboosters",
   examples: ["listboosters"],
   execute: async (ctx: any) => {
-    const boosters = ctx.guild.members.cache.filter(m => m.premiumSinceTimestamp !== null);
+    const boosters = ctx.guild.members.cache.filter((m: any) => m.premiumSinceTimestamp !== null);
     const description = boosters
-      .map(m => `• **${m.user.tag}** (Since <t:${Math.floor(m.premiumSinceTimestamp! / 1000)}:R>)`)
+      .map((m: any) => `• **${m.user.tag}** (Since <t:${Math.floor(m.premiumSinceTimestamp! / 1000)}:R>)`)
       .slice(0, 30)
       .join("\n") || "No active boosters.";
 

@@ -9,7 +9,7 @@ export const listchannelsCommand: Command = {
   usage: "listchannels",
   examples: ["listchannels"],
   execute: async (ctx: any) => {
-    const channels = ctx.guild.channels.cache.map(c => `• **${c.name}** (${c.id}) - <#${c.id}>`).slice(0, 25).join("\n") +
+    const channels = ctx.guild.channels.cache.map((c: any) => `• **${c.name}** (${c.id}) - <#${c.id}>`).slice(0, 25).join("\n") +
       (ctx.guild.channels.cache.size > 25 ? "\n... and more" : "");
 
     const embed = UniversalEmbed.neutral("Server Channels", ctx.guild)

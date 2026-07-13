@@ -10,7 +10,7 @@ export const membercountCommand: Command = {
   examples: ["membercount"],
   execute: async (ctx: any) => {
     const total = ctx.guild.memberCount;
-    const bots = ctx.guild.members.cache.filter(m => m.user.bot).size;
+    const bots = ctx.guild.members.cache.filter((m: any) => m.user.bot).size;
     const humans = total - bots;
 
     const embed = UniversalEmbed.info("Member Count Breakdown", ctx.guild)

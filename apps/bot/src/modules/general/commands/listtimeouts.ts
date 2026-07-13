@@ -10,10 +10,10 @@ export const listtimeoutsCommand: Command = {
   examples: ["listtimeouts"],
   execute: async (ctx: any) => {
     const timeouts = ctx.guild.members.cache.filter(
-      m => m.communicationDisabledUntilTimestamp !== null && m.communicationDisabledUntilTimestamp > Date.now()
+      (m: any) => m.communicationDisabledUntilTimestamp !== null && m.communicationDisabledUntilTimestamp > Date.now()
     );
     const description = timeouts
-      .map(m => `• **${m.user.tag}** (Until <t:${Math.floor(m.communicationDisabledUntilTimestamp! / 1000)}:R>)`)
+      .map((m: any) => `• **${m.user.tag}** (Until <t:${Math.floor(m.communicationDisabledUntilTimestamp! / 1000)}:R>)`)
       .slice(0, 30)
       .join("\n") || "No members currently timed out.";
 

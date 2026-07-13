@@ -10,8 +10,8 @@ export const listadminsCommand: Command = {
   usage: "listadmins",
   examples: ["listadmins"],
   execute: async (ctx: any) => {
-    const admins = ctx.guild.members.cache.filter(m => m.permissions.has(PermissionFlagsBits.Administrator) && !m.user.bot);
-    const description = admins.map(m => `• **${m.user.tag}** (${m.id})`).join("\n") || "No administrators found.";
+    const admins = ctx.guild.members.cache.filter((m: any) => m.permissions.has(PermissionFlagsBits.Administrator) && !m.user.bot);
+    const description = admins.map((m: any) => `• **${m.user.tag}** (${m.id})`).join("\n") || "No administrators found.";
 
     const embed = UniversalEmbed.neutral("Administrators List", ctx.guild)
       .setDescription(description);

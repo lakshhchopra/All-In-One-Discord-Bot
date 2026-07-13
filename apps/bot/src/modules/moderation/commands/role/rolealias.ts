@@ -25,7 +25,7 @@ export const rolealiasCommand: Command = {
     // ── SET ─────────────────────────────────────────────────────────────────
     if (action === "set") {
       const alias = ctx.getStringOption("alias", 1)?.toLowerCase();
-      const role = ctx.getRoleOption("role", 2);
+      const role = ctx.getRoleOption("role", 2, true);
 
       if (!alias || !role) {
         return ctx.reply({ embeds: [UniversalEmbed.error("Usage: `rolealias set <alias> <role>`", ctx.guild)] }, 5);

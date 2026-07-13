@@ -10,8 +10,8 @@ export const listmodsCommand: Command = {
   usage: "listmods",
   examples: ["listmods"],
   execute: async (ctx: any) => {
-    const mods = ctx.guild.members.cache.filter(m => m.permissions.has(PermissionFlagsBits.ModerateMembers) && !m.user.bot);
-    const description = mods.map(m => `• **${m.user.tag}** (${m.id})`).join("\n") || "No moderators found.";
+    const mods = ctx.guild.members.cache.filter((m: any) => m.permissions.has(PermissionFlagsBits.ModerateMembers) && !m.user.bot);
+    const description = mods.map((m: any) => `• **${m.user.tag}** (${m.id})`).join("\n") || "No moderators found.";
 
     const embed = UniversalEmbed.neutral("Moderators List", ctx.guild)
       .setDescription(description);

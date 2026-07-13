@@ -131,12 +131,12 @@ export class CommandContext {
     return this.guild.channels.cache.get(channelId) || null;
   }
 
-  getRoleOption(name: string, index: number) {
+  getRoleOption(name: string, index: number, rest: boolean = false) {
     if (this.isInteraction) {
       const interaction = this.source as ChatInputCommandInteraction;
       return interaction.options.getRole(name);
     }
-    const arg = this.args[index];
+    const arg = rest ? this.args.slice(index).join(" ") : this.args[index];
     if (!arg) return null;
 
     // 1. Try mention <@&id>

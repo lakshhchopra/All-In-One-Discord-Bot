@@ -30,14 +30,17 @@ export const infoCommand: Command = {
       const uptime = Math.floor(ctx.client.uptime! / 1000);
       const uptimeStr = `${Math.floor(uptime / 3600)}h ${Math.floor((uptime % 3600) / 60)}m ${uptime % 60}s`;
       const servers = ctx.client.guilds.cache.size;
-      const members = ctx.client.guilds.cache.reduce((a: number, g) => a + g.memberCount, 0);
+      const totalMembers = Array.from(ctx.client.guilds.cache.values()).reduce(
+        (a, g: any) => a + g.memberCount,
+        0
+      );
 
       const embed = UniversalEmbed.info("🤖 Bot Status & Statistics", ctx.guild)
         .addFields(
           { name: "Bot Name", value: ctx.client.user?.username || "Gupshup", inline: true },
           { name: "Uptime", value: uptimeStr, inline: true },
           { name: "Servers", value: String(servers), inline: true },
-          { name: "Total Users", value: String(members), inline: true },
+          { name: "Total Users", value: String(totalMembers), inline: true },
           { name: "Discord.js", value: "v14.11.0", inline: true },
           { name: "Node.js", value: process.version, inline: true }
         );

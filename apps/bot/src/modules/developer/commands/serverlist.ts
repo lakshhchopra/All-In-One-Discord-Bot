@@ -15,12 +15,12 @@ export const serverListCommand: Command = {
     }
 
     const guilds = Array.from(ctx.client.guilds.cache.values());
-    guilds.sort((a, b) => b.memberCount - a.memberCount); // Sort by largest first
+    guilds.sort((a: any, b: any) => b.memberCount - a.memberCount); // Sort by largest first
 
     const embed = new UniversalEmbed("info")
       .setTitle(`Server List (${guilds.length} total)`)
       .setDescription(
-        guilds.slice(0, 20).map((g, i) => `**${i + 1}.** ${g.name} - \`${g.memberCount} members\` (${g.id})`).join("\n")
+        guilds.slice(0, 20).map((g: any, i: number) => `**${i + 1}.** ${g.name} - \`${g.memberCount} members\` (${g.id})`).join("\n")
       );
 
     if (guilds.length > 20) {

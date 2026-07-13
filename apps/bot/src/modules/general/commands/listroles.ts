@@ -9,7 +9,7 @@ export const listrolesCommand: Command = {
   usage: "listroles",
   examples: ["listroles"],
   execute: async (ctx: any) => {
-    const roles = ctx.guild.roles.cache.map(r => `• **${r.name}** (${r.id})`).slice(0, 30).join("\n") +
+    const roles = ctx.guild.roles.cache.map((r: any) => `• **${r.name}** (${r.id})`).slice(0, 30).join("\n") +
       (ctx.guild.roles.cache.size > 30 ? "\n... and more" : "");
 
     const embed = UniversalEmbed.neutral("Server Roles", ctx.guild)

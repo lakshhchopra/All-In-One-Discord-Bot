@@ -11,7 +11,7 @@ export const listbansCommand: Command = {
   execute: async (ctx: any) => {
     try {
       const bans = await ctx.guild.bans.fetch({ limit: 20 });
-      const str = bans.map(b => `• **${b.user.tag}** (${b.user.id})`).join("\n") || "No banned users.";
+      const str = bans.map((b: any) => `• **${b.user.tag}** (${b.user.id})`).join("\n") || "No banned users.";
 
       const embed = UniversalEmbed.neutral("Banned Users", ctx.guild)
         .setDescription(str);

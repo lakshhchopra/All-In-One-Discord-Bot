@@ -1,6 +1,7 @@
-import { PermissionFlagsBits } from "discord.js";
+import { PermissionFlagsBits, Role } from "discord.js";
 import { Command } from "../../../../commands/command.js";
 import { UniversalEmbed } from "../../../../services/embed.js";
+import { prisma } from "../../../../services/db.js";
 
 export const roleaddCommand: Command = {
   name: "roleadd",
@@ -15,7 +16,20 @@ export const roleaddCommand: Command = {
       return ctx.reply({ embeds: [UniversalEmbed.error("You need the **Manage Roles** permission.", ctx.guild)] }, 5);
     }
     const member = ctx.getMemberOption("member", 0);
-    const role = ctx.getRoleOption("role", 1);
+    let role = ctx.getRoleOption("role", 1, true) as Role | null;
+    
+    // Check aliases if role isn't directly found by name or ID
+    if (!role && ctx.args.length > 1) {
+      const query = ctx.args.slice(1).join(" ").toLowerCase();
+      const config = await prisma.guildConfig.findUnique({ where: { guildId: ctx.guild.id } });
+      const settings = (config?.logToggles as Record<string, any>) ?? {};
+      const aliases: Record<string, string> = settings.roleAliases ?? {};
+      
+      if (aliases[query]) {
+        role = ctx.guild.roles.cache.get(aliases[query]) || null;
+      }
+    }
+
     if (!member || !role) return ctx.wrongUsage(roleaddCommand);
 
     if (member.roles.cache.has(role.id)) {

@@ -11,7 +11,7 @@ export const raidlockCommand: Command = {
   usage: "raidlock",
   examples: ["raidlock"],
   execute: async (ctx: any) => {
-    const textChannels = ctx.guild.channels.cache.filter(c => c.isTextBased() && !c.isDMBased());
+    const textChannels = ctx.guild.channels.cache.filter((c: any) => c.isTextBased() && !c.isDMBased());
     for (const [_, ch] of textChannels) {
       try {
         if (ch instanceof TextChannel) {
