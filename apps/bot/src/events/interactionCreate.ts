@@ -252,7 +252,7 @@ export async function handleInteractionCreate(interaction: Interaction) {
     if (customId.startsWith("help:")) {
       const parts = customId.split(":");
       const action = parts[1];
-      const targetUserId = action === "show" ? parts[3] : parts[2];
+      const targetUserId = (action === "show" || action === "all_page") ? parts[3] : parts[2];
 
       if (interaction.user.id !== targetUserId) {
         return interaction.reply({ content: "❌ You cannot use this help menu. Run `-help` to create your own.", ephemeral: true });
@@ -269,10 +269,36 @@ export async function handleInteractionCreate(interaction: Interaction) {
       else if (action === "delete") {
         await interaction.message.delete();
       } 
-      else if (action === "all") {
+      else if (action === "all" || action === "all_page") {
         const embeds = getAllCommandsEmbed(prefix, interaction.guild!);
-        await interaction.reply({ embeds, flags: 64 });
-      } 
+        let page = 0;
+        if (action === "all_page") {
+          page = parseInt(parts[2], 10);
+          if (isNaN(page) || page < 0) page = 0;
+          if (page >= embeds.length) page = embeds.length - 1;
+        }
+
+        const embed = embeds[page];
+        
+        const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+          new ButtonBuilder()
+            .setCustomId(`help:all_page:${page - 1}:${targetUserId}`)
+            .setEmoji("◀️")
+            .setStyle(ButtonStyle.Secondary)
+            .setDisabled(page === 0),
+          new ButtonBuilder()
+            .setCustomId(`help:all_page:${page + 1}:${targetUserId}`)
+            .setEmoji("▶️")
+            .setStyle(ButtonStyle.Secondary)
+            .setDisabled(page === embeds.length - 1)
+        );
+
+        if (action === "all") {
+          await interaction.reply({ embeds: [embed], components: [row], flags: 64 });
+        } else {
+          await interaction.update({ embeds: [embed], components: [row] });
+        }
+      }
       else if (action === "category" && interaction.isStringSelectMenu()) {
         const selectedCategory = interaction.values[0];
         const embed = getCategoryEmbed(selectedCategory, prefix, interaction.guild!);
