@@ -392,7 +392,7 @@ function getComponents(mode: "love" | "hate" | "friendship", isSelectingUser: bo
 }
 
 export const shipCommand: Command = {
-  name: "ship", 
+  name: "ship",
   description: "Calculate compatibility (Love, Hate, or Friendship) between users with interactive buttons and canvas.",
   category: "Games",
   usage: "ship [user1] [user2]",
@@ -425,10 +425,10 @@ export const shipCommand: Command = {
     } else {
       u1 = ctx.member;
       // Get random member (can be bots or anyone in the server)
-      u2 = ctx.guild.members.cache.filter(m => m.id !== ctx.user.id).random() || null;
+      u2 = ctx.guild.members.cache.filter((m: any) => m.id !== ctx.user.id).random() || null;
     }
 
-    if (!u2) {
+    if (!u1 || !u2) {
       return ctx.reply({ embeds: [UniversalEmbed.error("Could not find any other member in the server to ship with!", ctx.guild)] }, 5);
     }
 
@@ -471,11 +471,11 @@ export const shipCommand: Command = {
       if (!response) return;
 
       const collector = response.createMessageComponentCollector({
-        filter: (i) => i.user.id === ctx.user.id,
+        filter: (i: any) => i.user.id === ctx.user.id,
         time: 300000 // 5 minutes timeout
       });
 
-      collector.on("collect", async (interaction) => {
+      collector.on("collect", async (interaction: any) => {
         try {
           const id = interaction.customId;
           let nextMode = currentMode;
@@ -490,7 +490,7 @@ export const shipCommand: Command = {
             nextMode = "friendship";
           } else if (id === "ship_random") {
             // Find a new random member excluding target1 (can be bots)
-            const newRandom = ctx.guild.members.cache.filter(m => m.id !== target1.id).random();
+            const newRandom = ctx.guild.members.cache.filter((m: any) => m.id !== target1.id).random();
             if (newRandom) {
               nextTarget2 = newRandom;
             }
@@ -518,7 +518,7 @@ export const shipCommand: Command = {
             isSelectingUser = false; // reset state
           } else {
             // 1. Acknowledge and disable components on the current old message
-            const disabledComponents = response.components.map(row => {
+            const disabledComponents = response.components.map((row: any) => {
               const disabledRow = ActionRowBuilder.from(row as any);
               disabledRow.components.forEach((c: any) => c.setDisabled(true));
               return disabledRow;
@@ -536,11 +536,11 @@ export const shipCommand: Command = {
         }
       });
 
-      collector.on("end", async (_, reason) => {
+      collector.on("end", async (_: any, reason: string) => {
         if (reason !== "next") {
           try {
             // Disable components after final timeout
-            const disabledComponents = response.components.map(row => {
+            const disabledComponents = response.components.map((row: any) => {
               const disabledRow = ActionRowBuilder.from(row as any);
               disabledRow.components.forEach((c: any) => c.setDisabled(true));
               return disabledRow;

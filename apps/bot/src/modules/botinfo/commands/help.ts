@@ -35,7 +35,6 @@ export const COMMAND_USAGES: Record<string, string> = {
   counting: "counting <channel | show | reset> [#channel]",
   lb: "lb <count | messages | invites | dailymessage>",
   ship: "ship <@user1> [@user2]",
-  match: "match <@user1> [@user2]",
   afk: "afk [message]",
   membercount: "membercount",
   boostcount: "boostcount",
@@ -167,7 +166,7 @@ export const CATEGORY_DETAILS: Record<string, string> = {
     `> **Counting**\n` +
     `\`counting channel\`, \`lb count\`, \`count\`\n\n` +
     `> **Ship**\n` +
-    `\`ship\`, \`match\`, \`ship random\`, \`hate\`, \`love\`, \`friendship\``,
+    `\`ship\`, \`ship random\`, \`hate\`, \`love\`, \`friendship\``,
 
   music:
     `> **Music Commands**\n` +
